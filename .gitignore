@@ -49,7 +49,8 @@
 # Visual studio project files
 *.vcxproj
 *.vcxproj.*
-
+.vs/*
+*.sln
 
 # Files marked as backup
 *.bak
