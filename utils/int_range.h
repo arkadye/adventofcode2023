@@ -8,10 +8,8 @@
 namespace utils
 {
 
-	template <typename INT,
-		std::enable_if_t<std::is_integral<INT>::value, int> = 0
-	>
-		class int_range
+	template <std::integral INT>
+	class int_range
 	{
 		INT min, max, stride;
 		static constexpr INT get_max(INT min, INT max, INT stride)
