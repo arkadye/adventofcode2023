@@ -1,3 +1,6 @@
+#Ignore puzzle inputs
+*.txt
+
 # Prerequisites
 *.d
 
