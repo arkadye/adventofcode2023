@@ -55,8 +55,9 @@ verification_test make_test(std::string name, TestFuncWithArg func, std::string 
 verification_test make_test(std::string name, TestFuncWithArg func, Dummy, std::string arg);
 
 #define ARG(func_name) std::string{ #func_name },func_name
+#define ARG_WITH_PARAM(func_name,param) std::string{ #func_name "("  #param ")"  }, func_name
 #define TESTCASE(func_name,expected_result) make_test(ARG(func_name),expected_result)
-#define TESTCASE_WITH_ARG(func_name,arg,expected_result) make_test(ARG(func_name),expected_result,arg)
+#define TESTCASE_WITH_ARG(func_name,arg,expected_result) make_test(ARG_WITH_PARAM(func_name,arg),expected_result,arg)
 #define FUNC_NAME(day_num,part_num) advent_ ## day_num ## _p ## part_num
 #define TEST_DECL(day_num,part_num,expected_result) TESTCASE(FUNC_NAME(day_num,part_num),expected_result)
 #define DAY(day_num,part1_result,part2_result) \
