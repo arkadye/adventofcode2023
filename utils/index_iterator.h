@@ -10,7 +10,7 @@
 namespace utils
 {
 
-	class index_iterator_base
+	class index_iterator_base : public std::random_access_iterator_tag
 	{
 	public:
 		template <typename T>
@@ -99,16 +99,16 @@ namespace utils
 		{
 			return operator+=(-offset);
 		}
-		constexpr index_iterator& operator++(int) noexcept { return operator+=(1); }
-		constexpr index_iterator& operator--(int) noexcept { return operator-=(1); }
-		constexpr index_iterator operator++() noexcept
+		constexpr index_iterator& operator++() noexcept { return operator+=(1); }
+		constexpr index_iterator& operator--() noexcept { return operator-=(1); }
+		constexpr index_iterator operator++(int) noexcept
 		{
-			const auto res = operator++(0);
+			const auto res = operator++();
 			return res;
 		}
-		constexpr index_iterator operator--() noexcept
+		constexpr index_iterator operator--(int) noexcept
 		{
-			const auto res = operator--(0);
+			const auto res = operator--();
 			return res;
 		}
 		constexpr index_iterator operator+(difference_type offset) const noexcept
@@ -131,6 +131,12 @@ namespace utils
 	};
 
 	template <class Container>
+	index_iterator<Container> operator+(typename index_iterator<Container>::difference_type left, index_iterator<Container> right)
+	{
+		return right + left;
+	}
+
+	template <class Container>
 	using const_index_iterator = index_iterator<const Container>;
 
 	template <class Container>
@@ -148,7 +154,7 @@ namespace utils
 		using Base::pos;
 		using Base::get_from_real_index;
 	public:
-		constexpr reverse_index_iterator() noexcept : index_iterator{} {}
+		constexpr reverse_index_iterator() noexcept : index_iterator<Container>{} {}
 		constexpr reverse_index_iterator& operator+=(difference_type offset) noexcept override final
 		{
 			pos -= offset;
