@@ -1,3 +1,6 @@
+#Ignore puzzle inputs
+*.txt
+
 # Prerequisites
 *.d
 
@@ -49,7 +52,8 @@
 # Visual studio project files
 *.vcxproj
 *.vcxproj.*
-
+.vs/*
+*.sln
 
 # Files marked as backup
 *.bak

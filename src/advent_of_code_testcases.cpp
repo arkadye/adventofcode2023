@@ -22,6 +22,11 @@ std::string to_string(const ResultType& rt)
 	return "!ERROR!";
 }
 
+std::string to_string(const std::optional<std::string>& os)
+{
+	return os.value_or("");
+}
+
 // Result a test can give.
 enum class test_status : char
 {
@@ -140,6 +145,21 @@ std::string to_human_readable(std::chrono::nanoseconds time)
 	return to_human_readable(us);
 }
 
+template <typename TestType>
+std::pair<ResultType,std::chrono::nanoseconds> run_test_func(TestType test)
+{
+	const auto start_time = std::chrono::high_resolution_clock::now();
+	auto res = test.execute();
+	const auto end_time = std::chrono::high_resolution_clock::now();
+	return std::pair{res, end_time - start_time};
+}
+
+struct TestExecutor
+{
+	template <typename TestType>
+	std::pair<ResultType,std::chrono::nanoseconds> operator()(TestType test) { return run_test_func(std::move(test)); }
+};
+
 test_result run_test(const verification_test& test, std::string_view filter)
 {
 	if (test.name.find(filter) == test.name.npos)
@@ -151,26 +171,24 @@ test_result run_test(const verification_test& test, std::string_view filter)
 			test_status::filtered
 		};
 	}
-	std::cout << "Running test " << test.name << ": ";
+	std::cout << "Running test " << test.name << "...";
 	const auto start_time = std::chrono::high_resolution_clock::now();
-	const auto res = test.test_func();
-	const auto end_time = std::chrono::high_resolution_clock::now();
-	const std::chrono::nanoseconds time_taken = end_time - start_time;
+	const auto [res,time_taken] = std::visit(TestExecutor{}, test.test_func);
 	const auto string_result = to_string(res);
-	std::cout << "took " << to_human_readable(time_taken) <<  " and got " << string_result << '\n';
+	std::cout << "\nFinished " << test.name << ": took " << to_human_readable(time_taken) <<  " and got " << string_result << '\n';
 	auto get_result = [&](test_status status)
 	{
-		return test_result{ test.name,string_result,test.expected_result,status,time_taken };
+		return test_result{ test.name,string_result,to_string(test.expected_result),status,time_taken };
 	};
-	if (test.result_known && string_result == test.expected_result)
+
+	if(!test.expected_result.has_value())
 	{
-		return get_result(test_status::pass);
+		return get_result(test_status::unknown);
 	}
-	else if (test.result_known && string_result != test.expected_result)
+	else
 	{
-		return get_result(test_status::fail);
+		return get_result(string_result == *test.expected_result ? test_status::pass : test_status::fail);
 	}
-	return get_result(test_status::unknown);
 }
 
 bool verify_all(const std::string& filter)
@@ -182,14 +200,14 @@ bool verify_all(const std::string& filter)
 	auto result_to_string = [&filter](const test_result& result)
 	{
 		std::ostringstream oss;
-		oss << result.name << ": " << to_string(result.result) << " - ";
+		oss << result.name << ": " << result.result << " - ";
 		switch (result.status)
 		{
 		case test_status::pass:
 			oss << "PASS\n";
 			break;
 		case test_status::fail:
-			oss << "FAIL (expected " << to_string(result.expected) << ")\n";
+			oss << "FAIL (expected " << result.expected << ")\n";
 			break;
 		case test_status::filtered:
 			return std::string{ "" };
@@ -231,15 +249,31 @@ verification_test make_test(std::string name, TestFunc func, int64_t result)
 
 verification_test make_test(std::string name, TestFunc func, std::string result)
 {
-	return verification_test{ std::move(name),func,result,true };
+	return verification_test{ std::move(name),func,std::move(result) };
 }
 
 verification_test make_test(std::string name, TestFunc func, Dummy)
 {
-	return verification_test{ std::move(name),func,"",false };
+	return verification_test{ std::move(name),func };
 }
 
-verification_test make_test(std::string name, Dummy, Dummy)
+verification_test make_test(std::string name, TestFuncWithArg func, int64_t result, std::string arg)
 {
-	return make_test(std::move(name), []() { std::cout << "Test not implemented yet"; return ResultType{ 0 }; }, Dummy{});
+	return make_test(std::move(name), func, std::to_string(result), std::move(arg));
+}
+
+verification_test make_test(std::string name, TestFuncWithArg func, std::string result, std::string arg)
+{
+	return verification_test{std::move(name), func, std::move(arg), std::move(result)};
+}
+
+verification_test make_test(std::string name, TestFuncWithArg func, Dummy, std::string arg)
+{
+	return verification_test{std::move(name), func, std::move(arg)};
+}
+
+ResultType TestWithArgExecutable::execute()
+{
+	std::istringstream iss{ std::move(arg)};
+	return func(iss);
 }
