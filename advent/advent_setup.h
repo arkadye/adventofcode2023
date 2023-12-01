@@ -1,36 +1,43 @@
 #pragma once
 
 #include "advent_testcase_setup.h"
+#include "advent_test_inputs.h"
+#include "advent_headers.h"
 
 static const std::string DEFAULT_FILTER = "";
 
 static const verification_test tests[] =
 {
-	DAY(one,Dummy{},Dummy{}),
-	DAY(two,Dummy{},Dummy{}),
-	DAY(three,Dummy{},Dummy{}),
-	DAY(four,Dummy{},Dummy{}),
-	DAY(five,Dummy{},Dummy{}),
-	DAY(six,Dummy{},Dummy{}),
-	DAY(seven,Dummy{},Dummy{}),
-	DAY(eight,Dummy{},Dummy{}),
-	DAY(nine,Dummy{},Dummy{}),
-	DAY(ten,Dummy{},Dummy{}),
-	DAY(eleven,Dummy{},Dummy{}),
-	DAY(twelve,Dummy{},Dummy{}),
-	DAY(thirteen,Dummy{},Dummy{}),
-	DAY(fourteen,Dummy{},Dummy{}),
-	DAY(fifteen,Dummy{},Dummy{}),
-	DAY(sixteen,Dummy{},Dummy{}),
-	DAY(seventeen,Dummy{},Dummy{}),
-	DAY(eighteen,Dummy{},Dummy{}),
-	DAY(nineteen,Dummy{},Dummy{}),
-	DAY(twenty,Dummy{},Dummy{}),
-	DAY(twentyone,Dummy{},Dummy{}),
-	DAY(twentytwo,Dummy{},Dummy{}),
-	DAY(twentythree,Dummy{},Dummy{}),
-	DAY(twentyfour,Dummy{},Dummy{}),
-	DAY(twentyfive,Dummy{},"MERRY CHRISTMAS!")
+	TESTCASE_WITH_ARG(testcase_one_a, TEST_ONE_A, 12),
+	TESTCASE_WITH_ARG(testcase_one_a, TEST_ONE_B, 38),
+	TESTCASE_WITH_ARG(testcase_one_a, TEST_ONE_C, 15),
+	TESTCASE_WITH_ARG(testcase_one_a, TEST_ONE_D, 77),
+	TESTCASE_WITH_ARG(testcase_one_a, TEST_ONE_E, 142),
+	DAY(one,dummy,dummy),
+	DAY(two,dummy,dummy),
+	DAY(three,dummy,dummy),
+	DAY(four,dummy,dummy),
+	DAY(five,dummy,dummy),
+	DAY(six,dummy,dummy),
+	DAY(seven,dummy,dummy),
+	DAY(eight,dummy,dummy),
+	DAY(nine,dummy,dummy),
+	DAY(ten,dummy,dummy),
+	DAY(eleven,dummy,dummy),
+	DAY(twelve,dummy,dummy),
+	DAY(thirteen,dummy,dummy),
+	DAY(fourteen,dummy,dummy),
+	DAY(fifteen,dummy,dummy),
+	DAY(sixteen,dummy,dummy),
+	DAY(seventeen,dummy,dummy),
+	DAY(eighteen,dummy,dummy),
+	DAY(nineteen,dummy,dummy),
+	DAY(twenty,dummy,dummy),
+	DAY(twentyone,dummy,dummy),
+	DAY(twentytwo,dummy,dummy),
+	DAY(twentythree,dummy,dummy),
+	DAY(twentyfour,dummy,dummy),
+	DAY(twentyfive,dummy,"MERRY CHRISTMAS!")
 };
 
 #undef ARG
