@@ -16,8 +16,8 @@ namespace utils
 		std::string_view m_string;
 		std::string_view m_sentinental;
 		char m_sentinental_storage;
-		std::optional<std::pair<std::string_view,std::string_view>> m_cached_split_result;
-		std::pair<std::string_view, std::string_view> get_split_result()
+		mutable std::optional<std::pair<std::string_view,std::string_view>> m_cached_split_result;
+		std::pair<std::string_view, std::string_view> get_split_result() const
 		{
 			if (is_at_end())
 			{
@@ -34,9 +34,9 @@ namespace utils
 		}
 		bool is_at_end() const { return m_string.empty(); }
 	public:
-		using pointer = const std::string*;
-		using reference = const std::string&;
-		using value_type = std::string;
+		using pointer = const std::string_view*;
+		using reference = const std::string_view&;
+		using value_type = std::string_view;
 		using difference_type = int;
 		using iterator_category = std::forward_iterator_tag;
 		explicit string_line_iterator(std::string_view string, char sentinental = '\n') noexcept
@@ -62,7 +62,7 @@ namespace utils
 			return !(this->operator==(other));
 		}
 
-		std::string_view operator*()
+		std::string_view operator*() const
 		{
 			auto [result,unneeded] = get_split_result();
 			return result;
