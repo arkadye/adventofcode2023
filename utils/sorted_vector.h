@@ -526,6 +526,11 @@ namespace utils
 			return std::pair{insert_result,true};
 		}
 
+		std::pair<iterator, bool> insert_or_assign(const KeyType& key, const MappedType& val)
+		{
+			return insert_or_assign(key, MappedType(val));
+		}
+
 		std::pair<iterator, bool> insert_or_assign(KeyType&& key, MappedType&& val)
 		{
 			const iterator find_result = find_by_key(key);
@@ -537,6 +542,11 @@ namespace utils
 			const auto [insert_result, success] = insert_unique(std::forward<KeyType>(key), std::forward<MappedType>(val));
 			AdventCheck(success);
 			return std::pair{ insert_result,true };
+		}
+
+		std::pair<iterator, bool> insert_or_assign(KeyType&& key, const MappedType& val)
+		{
+			return insert_or_assign(std::forward<KeyType>(key), MappedType(val));
 		}
 
 		MappedType& operator[](const KeyType& key)
