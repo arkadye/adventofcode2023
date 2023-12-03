@@ -8,12 +8,14 @@
 #include <iostream>
 #include <filesystem>
 
+#include "advent_assert.h"
+
 namespace advent
 {
 	inline std::ifstream open_input(const std::string& filename)
 	{
 		auto result = std::ifstream{ filename };
-		assert(result.is_open());
+		AdventCheck(result.is_open());
 #ifndef NDEBUG
 		if (std::filesystem::file_size(filename) <= 0)
 		{
