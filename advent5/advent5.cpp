@@ -114,7 +114,8 @@ namespace
 			{
 				AdventCheck(high > in);
 				const ID distance = high - in;
-				return ConvertResult{in + diff , static_cast<int64_t>(high) - static_cast<int64_t>(in)};
+				AdventCheck(distance < static_cast<ID>(std::numeric_limits<int64_t>::max()));
+				return ConvertResult{in + diff , static_cast<int64_t>(distance)};
 			}
 			else
 			{
@@ -122,6 +123,7 @@ namespace
 			}
 		}
 		auto operator<=>(const Region& other) const noexcept = default;
+		auto operator<=>(ID id) const noexcept { return low <=> id; }
 	};
 
 	Region to_region(std::string_view line)
@@ -165,7 +167,11 @@ namespace
 
 		TransformResult transform_id(ID in) const noexcept
 		{
-			const auto relevant_transform = transforms.lower_bound(Region{in,in,1});
+			auto find_fn = [in](const Region& r)
+				{
+					return r.is_in_range(in) || r >= in;
+				};
+			const auto relevant_transform = std::ranges::find_if(transforms, find_fn);
 			if(relevant_transform == end(transforms))
 			{
 				return TransformResult{ in , get_output_type() , std::nullopt };
@@ -225,7 +231,8 @@ namespace
 		{
 			AdventCheck(from != IDType::NUM);
 			AdventCheck(to != IDType::NUM);
-			const auto [new_id , new_type , distance_to_end] = transforms[to_idx(from)].transform_id(in_id);
+			const Transform& transform = transforms[to_idx(from)];
+			const auto [new_id , new_type , distance_to_end] = transform.transform_id(in_id);
 			if(new_type == to)
 			{
 				return ConvertResult{ new_id , distance_to_end };
@@ -317,7 +324,7 @@ namespace
 
 namespace
 {
-	int solve_p2(std::istream& input)
+	int64_t solve_p2(std::istream& input)
 	{
 		const IDList seeds = get_seeds<AdventDay::two>(input);
 		return solve_generic(seeds, input);
@@ -329,7 +336,9 @@ ResultType advent5_internal::p1_a(std::istream& input, uint64_t seed)
 	std::string dummy;
 	std::getline(input,dummy);
 	std::getline(input,dummy);
-	return solve_generic(IDList{seed}, input);
+	const IDRange range{ seed , seed + 1 };
+	const IDList ids{ range };
+	return solve_generic(ids, input);
 }
 
 ResultType testcase_five_p1_b(std::istream& input)
