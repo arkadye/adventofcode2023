@@ -63,20 +63,25 @@ namespace utils
 			}
 		}
 
-		void clear()
+		void clear() noexcept
 		{
 			m_data.clear();
 			m_sorted = true;
 		}
 
-		bool empty() const
+		bool empty() const noexcept
 		{
 			return m_data.empty();
 		}
 
-		std::size_t size() const
+		std::size_t size() const noexcept
 		{
 			return m_data.size();
+		}
+
+		std::size_t capacity() const noexcept
+		{
+			return m_data.capacity();
 		}
 
 		iterator lower_bound(const T& value)
