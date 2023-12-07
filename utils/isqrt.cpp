@@ -1,9 +1,10 @@
 #include "isqrt.h"
 
 #include <cassert>
+
 namespace
 {
-	uint32_t isqrt_implementation(uint32_t guess_base, uint32_t input)
+	uint64_t isqrt_implementation(uint64_t guess_base, uint64_t input) noexcept
 	{
 		assert(input > 0);
 		uint64_t guess = 1;
@@ -14,7 +15,7 @@ namespace
 			const uint64_t trial_square = sqr(trial_result);
 			if (trial_square == input) // Perfect match!
 			{
-				return static_cast<int32_t>(trial_result);
+				return trial_result;
 			}
 			else if (trial_square < input) // Too small. Try a bigger number.
 			{
@@ -27,7 +28,7 @@ namespace
 			else // guess > 1 && trial_result is too big.
 			{
 				// Roll the guess back a stage (div by 2) and restart with a better base.
-				return isqrt_implementation(guess_base + static_cast<uint32_t>(guess / 2), input);
+				return isqrt_implementation(guess_base + guess / 2, input);
 			}
 		}
 	}
@@ -35,7 +36,7 @@ namespace
 
 // Return the square root of an integer. If not exact, this is rounded down.
 // Guaranteed to have no floating point inaccuracies.
-uint32_t utils::isqrt(uint32_t input)
+uint64_t utils::isqrt(uint64_t input) noexcept
 {
 	switch (input)
 	{
@@ -47,8 +48,20 @@ uint32_t utils::isqrt(uint32_t input)
 	}
 }
 
-int32_t utils::isqrt(int32_t input)
+int64_t utils::isqrt(int64_t input) noexcept
 {
 	assert(input >= 0);
-	return static_cast<int32_t>(isqrt(static_cast<uint32_t>(input)));
+	return static_cast<int64_t>(isqrt(static_cast<uint64_t>(input)));
+}
+
+bool utils::is_square(uint64_t input) noexcept
+{
+	const uint64_t root = utils::isqrt(input);
+	return input == (root * root);
+}
+
+bool utils::is_square(int64_t input) noexcept
+{
+	if(input < 0) return false;
+	return is_square(static_cast<uint64_t>(input));
 }
