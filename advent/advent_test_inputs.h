@@ -92,3 +92,8 @@ temperature-to-humidity map:
 humidity-to-location map:
 60 56 37
 56 93 4)";
+
+constexpr const char* TEST_SIX_A = "Time:      7\nDistance:  9";
+constexpr const char* TEST_SIX_B = "Time:      15\nDistance:  40";
+constexpr const char* TEST_SIX_C = "Time:      30\nDistance:  200";
+constexpr const char* TEST_SIX_D = "Time:      7  15   30\nDistance:  9  40  200";
