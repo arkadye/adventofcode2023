@@ -33,7 +33,7 @@ namespace advent
 #define TEST_ONE_B "pqr3stu8vwx"
 #define TEST_ONE_C "a1b2c3d4e5f"
 #define TEST_ONE_D "treb7uchet"
-static const auto TEST_FILE_A = advent::combine_inputs(TEST_ONE_A, TEST_ONE_B, TEST_ONE_C, TEST_ONE_D);
+static const auto TEST_ONE_FILE_A = advent::combine_inputs(TEST_ONE_A, TEST_ONE_B, TEST_ONE_C, TEST_ONE_D);
 #define TEST_ONE_F "two1nine"
 #define TEST_ONE_G "eightwothree"
 #define TEST_ONE_H "abcone2threexyz"
@@ -41,7 +41,7 @@ static const auto TEST_FILE_A = advent::combine_inputs(TEST_ONE_A, TEST_ONE_B, T
 #define TEST_ONE_J "4nineeightseven2"
 #define TEST_ONE_K "zoneight234"
 #define TEST_ONE_L "7pqrstsixteen"
-static const auto TEST_FILE_B = advent::combine_inputs(TEST_ONE_F, TEST_ONE_G, TEST_ONE_H, TEST_ONE_I, TEST_ONE_J, TEST_ONE_K, TEST_ONE_L);
+static const auto TEST_ONE_FILE_B = advent::combine_inputs(TEST_ONE_F, TEST_ONE_G, TEST_ONE_H, TEST_ONE_I, TEST_ONE_J, TEST_ONE_K, TEST_ONE_L);
 
 constexpr const char* TEST_TWO_A = "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green";
 constexpr const char* TEST_TWO_B = "Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue";
@@ -93,7 +93,14 @@ humidity-to-location map:
 60 56 37
 56 93 4)";
 
-constexpr const char* TEST_SIX_A = "Time:      7\nDistance:  9";
-constexpr const char* TEST_SIX_B = "Time:      15\nDistance:  40";
-constexpr const char* TEST_SIX_C = "Time:      30\nDistance:  200";
-constexpr const char* TEST_SIX_D = "Time:      7  15   30\nDistance:  9  40  200";
+#define TEST_SIX_A "Time: 7\nDistance:  9"
+#define TEST_SIX_B "Time: 15\nDistance:  40"
+#define TEST_SIX_C "Time: 30\nDistance:  200"
+#define TEST_SIX_D "Time: 7  15   30\nDistance:  9  40  200"
+
+#define TEST_SEVEN_A "32T3K 765"
+#define TEST_SEVEN_B "T55J5 684"
+#define TEST_SEVEN_C "KK677 28"
+#define TEST_SEVEN_D "KTJJT 220"
+#define TEST_SEVEN_E "QQQJA 483"
+static const auto TEST_SEVEN_FILE_A = advent::combine_inputs(TEST_SEVEN_A, TEST_SEVEN_B, TEST_SEVEN_C, TEST_SEVEN_D, TEST_SEVEN_E);
