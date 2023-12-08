@@ -92,7 +92,6 @@ namespace
 
 	bool check_individual_color(const BallSet& valid_set, std::string_view description)
 	{
-		description = utils::trim_left(description);
 		const auto [num_str, color_str] = utils::split_string_at_first(description, ' ');
 		const auto num_balls = utils::to_value<BallCount>(num_str);
 		const Color color = to_color(color_str);
@@ -149,10 +148,8 @@ namespace
 {
 	BallSet get_from_draw(std::string_view draw)
 	{
-		draw = utils::trim_left(draw);
 		auto combine_fn = [](BallSet balls, std::string_view desc)
 			{
-				desc = utils::trim_left(desc);
 				auto [num_str, color_str] = utils::split_string_at_first(desc, ' ');
 				const auto num = utils::to_value<BallCount>(num_str);
 				const Color color = to_color(color_str);
@@ -166,7 +163,6 @@ namespace
 
 	BallSet get_from_game(std::string_view game)
 	{
-		game = utils::trim_left(game);
 		auto combine_fn = [](BallSet balls, std::string_view draw)
 			{
 				const BallSet next_draw = get_from_draw(draw);
