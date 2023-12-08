@@ -86,6 +86,9 @@ static const verification_test tests[] =
 	TESTCASE_WITH_ARG(testcase_seven_p2_b, TEST_SEVEN_FILE_A,5905),
 	DAY(seven,dummy,dummy),
 #undef DAY_SEVEN_TESTCASE
+	TESTCASE_WITH_ARG(testcase_eight_p1, TEST_EIGHT_A, 2),
+	TESTCASE_WITH_ARG(testcase_eight_p1, TEST_EIGHT_B, 6),
+	TESTCASE_WITH_ARG(testcase_eight_p2, TEST_EIGHT_C, 6),
 	DAY(eight,dummy,dummy),
 	DAY(nine,dummy,dummy),
 	DAY(ten,dummy,dummy),
