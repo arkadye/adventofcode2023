@@ -126,12 +126,12 @@ namespace
 		return result;
 	}
 
-	int solve_p1(const RaceList& rl)
+	int64_t solve_p1(const RaceList& rl)
 	{
 		return std::transform_reduce(begin(rl),end(rl),int64_t{1}, std::multiplies<int64_t>{}, get_num_winning_presses);
 	}
 
-	int solve_p1(std::istream& input)
+	int64_t solve_p1(std::istream& input)
 	{
 		const RaceList rl = parse_input_p1(input);
 		return solve_p1(rl);
