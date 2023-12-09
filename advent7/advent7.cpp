@@ -212,7 +212,7 @@ namespace
 		using ILI = utils::istream_line_iterator;
 		HandsMap result;
 		result.reserve(1000);
-		std::transform(ILI{input}, ILI{},std::back_inserter(result),parse_line); // TODO move to a std::ranges version when I'm using a compiler with good errors.
+		std::ranges::transform(utils::istream_line_range{input}, std::back_inserter(result), parse_line);
 		return result;
 	}
 

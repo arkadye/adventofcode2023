@@ -12,11 +12,11 @@ namespace utils
 	class istream_line_iterator
 	{
 	private:
-		std::istream* m_stream;
+		mutable std::istream* m_stream;
 		char m_sentinental;
 		bool is_at_end() const { return m_stream == nullptr; }
-		std::optional<std::string> m_cached_result;
-		void read_next_sequence()
+		mutable std::optional<std::string> m_cached_result;
+		void read_next_sequence() const
 		{
 			if (is_at_end())
 			{
@@ -31,7 +31,7 @@ namespace utils
 				m_stream = nullptr;
 			}
 		}
-		void maybe_read_next_sequence()
+		void maybe_read_next_sequence() const
 		{
 			if (!m_cached_result.has_value())
 			{
@@ -39,9 +39,9 @@ namespace utils
 			}
 		}
 	public:
-		using pointer = const std::string*;
-		using reference = const std::string&;
-		using value_type = std::string;
+		using pointer = const std::string_view*;
+		using reference = const std::string_view&;
+		using value_type = std::string_view;
 		using difference_type = int;
 		using iterator_category = std::input_iterator_tag;
 		explicit istream_line_iterator(std::istream& stream, char sentinental = '\n') noexcept
@@ -60,7 +60,7 @@ namespace utils
 			return !(this->operator==(other));
 		}
 
-		std::string_view operator*()
+		std::string_view operator*() const
 		{
 			maybe_read_next_sequence();
 			return m_cached_result.value();
