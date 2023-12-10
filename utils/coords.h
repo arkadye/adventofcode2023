@@ -67,6 +67,23 @@ namespace utils
 		return static_cast<direction>(dir_i);
 	}
 
+	inline direction turn_around(direction dir)
+	{
+		switch (dir)
+		{
+		case direction::up:
+			return direction::down;
+		case direction::right:
+			return direction::left;
+		case direction::down:
+			return direction::up;
+		case direction::left:
+			return direction::right;
+		}
+		AdventUnreachable();
+		return dir;
+	}
+
 	template <typename T>
 	struct basic_coords
 	{
