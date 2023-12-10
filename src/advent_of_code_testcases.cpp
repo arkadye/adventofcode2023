@@ -13,13 +13,21 @@
 #include "../advent/advent_of_code.h"
 #include "../advent/advent_headers.h"
 #include "../advent/advent_setup.h"
+#include "../advent/advent_assert.h"
+
+namespace
+{
+	struct ResultStringifier
+	{
+		std::string operator()(const std::string& in) const noexcept { return in; }
+		template <std::integral T>
+		std::string operator()(T in) const { return std::to_string(in); }
+	};
+}
 
 std::string to_string(const ResultType& rt)
 {
-	if (std::holds_alternative<std::string>(rt)) return std::get<std::string>(rt);
-	else if (std::holds_alternative<int64_t>(rt)) return std::to_string(std::get<int64_t>(rt));
-	assert(false);
-	return "!ERROR!";
+	return std::visit(ResultStringifier{}, rt);
 }
 
 std::string to_string(const std::optional<std::string>& os)
@@ -146,10 +154,27 @@ std::string to_human_readable(std::chrono::nanoseconds time)
 }
 
 template <typename TestType>
+ResultType test_execute_wrapper(TestType test)
+{
+#ifdef NDEBUG
+	return test.execute();
+#else
+	try
+	{
+		return test.execute();
+	}
+	catch (const advent::test_failed& tf)
+	{
+		return std::string{ "ERROR: " } + std::string{ tf.what() };
+	}
+#endif
+}
+
+template <typename TestType>
 std::pair<ResultType,std::chrono::nanoseconds> run_test_func(TestType test)
 {
 	const auto start_time = std::chrono::high_resolution_clock::now();
-	auto res = test.execute();
+	const ResultType res = test_execute_wrapper(std::move(test));
 	const auto end_time = std::chrono::high_resolution_clock::now();
 	return std::pair{res, end_time - start_time};
 }
@@ -172,7 +197,6 @@ test_result run_test(const verification_test& test, std::string_view filter)
 		};
 	}
 	std::cout << "Running test " << test.name << "...";
-	const auto start_time = std::chrono::high_resolution_clock::now();
 	const auto [res,time_taken] = std::visit(TestExecutor{}, test.test_func);
 	const auto string_result = to_string(res);
 	std::cout << "\nFinished " << test.name << ": took " << to_human_readable(time_taken) <<  " and got " << string_result << '\n';
