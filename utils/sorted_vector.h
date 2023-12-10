@@ -69,17 +69,17 @@ namespace utils
 			m_sorted = true;
 		}
 
-		bool empty() const noexcept
+		[[nodiscard]] bool empty() const noexcept
 		{
 			return m_data.empty();
 		}
 
-		std::size_t size() const noexcept
+		[[nodiscard]] std::size_t size() const noexcept
 		{
 			return m_data.size();
 		}
 
-		std::size_t capacity() const noexcept
+		[[nodiscard]] std::size_t capacity() const noexcept
 		{
 			return m_data.capacity();
 		}
@@ -563,7 +563,7 @@ namespace utils
 				AdventCheck(success);
 				result = insert_result;
 			}
-			return result;
+			return result->second;
 		}
 
 		MappedType& operator[](KeyType&& key)
@@ -575,7 +575,7 @@ namespace utils
 				AdventCheck(success);
 				result = insert_result;
 			}
-			return result;
+			return result->second;
 		}
 
 		MappedType& at(const KeyType& key)
