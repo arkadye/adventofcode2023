@@ -33,6 +33,7 @@ namespace utils
 	public:
 		bool is_on_grid(int x, int y) const;
 		bool is_on_grid(utils::coords coords) const { return is_on_grid(coords.x,coords.y); }
+		utils::coords get_max_point() const noexcept { return max_point; }
 
 		NodeType& at(int x, int y) { return m_nodes[get_idx(x,y)]; }
 		const NodeType& at(int x, int y) const { return m_nodes[get_idx(x,y)]; }
