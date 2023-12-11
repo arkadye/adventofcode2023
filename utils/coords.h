@@ -94,7 +94,11 @@ namespace utils
 		T size_squared() const noexcept { return x * x + y * y; }
 		double angle() const noexcept;
 		auto reduce() const noexcept;
-		auto manhatten_distance() const noexcept { return std::abs(x) + std::abs(y); }
+		auto manhatten_distance() const noexcept
+		{
+			auto my_abs = [](T in) { return in < static_cast<T>(0) ? -in : in; };
+			return my_abs(x) + my_abs(y);
+		}
 		auto manhatten_distance(const basic_coords& other) const noexcept;
 		constexpr basic_coords(T x_, T y_) : x{ x_ }, y{ y_ }{}
 		constexpr explicit basic_coords(T init) : basic_coords{ init,init } {}
@@ -135,6 +139,33 @@ namespace utils
 			return *this;
 		}
 
+		T operator[](std::size_t idx) const noexcept
+		{
+			AdventCheck(idx < 2u);
+			switch(idx)
+			{
+			case 0: return x;
+			case 1: return y;
+			default:
+				AdventUnreachable();
+				break;
+			}
+			return static_cast<T>(0);
+		}
+
+		T& operator[](std::size_t idx) noexcept
+		{
+			AdventCheck(idx < 2u);
+			switch (idx)
+			{
+			case 0: return x;
+			case 1: return y;
+			default:
+				AdventUnreachable();
+				break;
+			}
+			return x;
+		}
 
 		static basic_coords up() noexcept { return basic_coords{ 0,1 }; }
 		static basic_coords down() noexcept { return basic_coords{ 0,-1 }; }
@@ -269,7 +300,9 @@ namespace utils
 	template <typename T>
 	inline auto basic_coords<T>::manhatten_distance(const basic_coords& other) const noexcept
 	{
-		const basic_coords t = *this - other;
+		const T x_diff = (x < other.x ? other.x - x : x - other.x);
+		const T y_diff = (y < other.y ? other.y - y : y - other.y);
+		const basic_coords t{x_diff,y_diff};
 		return t.manhatten_distance();
 	}
 
