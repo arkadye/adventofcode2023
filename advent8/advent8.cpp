@@ -153,7 +153,7 @@ namespace
 		result.reserve(750);
 
 		using ILI = utils::istream_line_iterator;
-		std::transform(ILI{input}, ILI{},std::back_inserter(result),parse_node); // TODO make istream_line_range work with std::ranges.
+		//std::transform(ILI{input}, ILI{},std::back_inserter(result),parse_node); // TODO make istream_line_range work with std::ranges.
 
 		auto node_exists = [&result](NodeId id)
 		{
@@ -203,7 +203,7 @@ namespace
 	int count_steps(const Description& desc)
 	{
 		int result = 0;
-		NodeId location = start;
+		/*NodeId location = start;
 		while(location != end)
 		{
 			AdventCheckMsg(result < std::numeric_limits<int>::max(),"Looped too many times. Overflowing!");
@@ -211,7 +211,7 @@ namespace
 			const Junction& junction = desc.node_map.at(location);
 			location = junction.get_next(desc.direction_list[step_idx]);
 			++result;
-		}
+		}*/
 		return result;
 	}
 
