@@ -28,12 +28,21 @@ namespace utils
 	class grid
 	{
 		utils::small_vector<NodeType,1> m_nodes;
-		utils::coords max_point;
+		utils::coords m_max_point;
 		std::size_t get_idx(int x, int y) const;
 	public:
 		bool is_on_grid(int x, int y) const;
 		bool is_on_grid(utils::coords coords) const { return is_on_grid(coords.x,coords.y); }
-		utils::coords get_max_point() const noexcept { return max_point; }
+		utils::coords get_max_point() const noexcept { return m_max_point; }
+		void resize(const utils::coords& new_max, const NodeType& fill_value)
+		{
+			m_max_point = new_max;
+			m_nodes.resize(new_max.x * new_max.y, fill_value);
+		}
+		void resize(int new_x, int new_y, const NodeType& fill_value)
+		{
+			resize(utils::coords{ new_x,new_y });
+		}
 
 		NodeType& at(int x, int y) { return m_nodes[get_idx(x,y)]; }
 		const NodeType& at(int x, int y) const { return m_nodes[get_idx(x,y)]; }
@@ -44,9 +53,9 @@ namespace utils
 		utils::small_vector<coords,1> get_all_coordinates_by_predicate(auto predicate) const
 		{
 			utils::small_vector<coords, 1> result;
-			for (int x : utils::int_range{ max_point.x })
+			for (int x : utils::int_range{ m_max_point.x })
 			{
-				for (int y : utils::int_range{ max_point.y })
+				for (int y : utils::int_range{ m_max_point.y })
 				{
 					const NodeType& elem = at(x, y);
 					if (predicate(elem))
@@ -61,9 +70,9 @@ namespace utils
 		// Get a node using a predicate
 		std::optional<utils::coords> get_coordinates_by_predicate(auto predicate) const
 		{
-			for (int x : utils::int_range{max_point.x})
+			for (int x : utils::int_range{m_max_point.x})
 			{
-				for(int y : utils::int_range{max_point.y})
+				for(int y : utils::int_range{m_max_point.y})
 				{
 					const NodeType& elem = at(x,y);
 					if (predicate(elem))
@@ -88,17 +97,17 @@ namespace utils
 		{
 			for (auto line : utils::istream_line_range{ iss })
 			{
-				if(max_point.x == 0)
+				if(m_max_point.x == 0)
 				{
-					max_point.x = static_cast<int>(line.size());
-					m_nodes.reserve(max_point.x * max_point.x);
+					m_max_point.x = static_cast<int>(line.size());
+					m_nodes.reserve(m_max_point.x * m_max_point.x);
 				}
-				AdventCheck(max_point.x == static_cast<int>(line.size()));
+				AdventCheck(m_max_point.x == static_cast<int>(line.size()));
 				std::transform(begin(line),end(line),std::back_inserter(m_nodes),char_to_node_fn);
-				++max_point.y;
+				++m_max_point.y;
 			}
 #if AOC_GRID_DEBUG
-			std::cout << "Created grid with dimenstions [" << max_point << '\n';
+			std::cout << "Created grid with dimenstions [" << m_max_point << '\n';
 #endif
 		}
 
@@ -210,8 +219,8 @@ inline bool utils::grid<NodeType>::is_on_grid(int x, int y) const
 {
 	if(x < 0) return false;
 	if(y < 0) return false;
-	if(x >= max_point.x) return false;
-	if(y >= max_point.y) return false;
+	if(x >= m_max_point.x) return false;
+	if(y >= m_max_point.y) return false;
 	return true;
 }
 
@@ -219,7 +228,7 @@ template <typename NodeType>
 inline std::size_t utils::grid<NodeType>::get_idx(int x, int y) const
 {
 	AdventCheck(is_on_grid(x,y));
-	const std::size_t result = max_point.x * y + x;
+	const std::size_t result = m_max_point.x * y + x;
 	return result;
 }
 
