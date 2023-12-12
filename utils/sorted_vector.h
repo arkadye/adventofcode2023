@@ -58,7 +58,7 @@ namespace utils
 		{
 			if (!m_sorted)
 			{
-				std::sort(m_data.begin(), m_data.end(), m_compare);
+				stdr::sort(m_data, m_compare);
 				m_sorted = true;
 			}
 		}
@@ -87,31 +87,31 @@ namespace utils
 		iterator lower_bound(const T& value)
 		{
 			sort();
-			return std::lower_bound(m_data.begin(), m_data.end(), value, m_compare);
+			return stdr::lower_bound(m_data, value, m_compare);
 		}
 
 		iterator upper_bound(const T& value)
 		{
 			sort();
-			return std::upper_bound(m_data.begin(), m_data.end(), value, m_compare);
+			return stdr::upper_bound(m_data, value, m_compare);
 		}
 
 		const_iterator lower_bound(const T& value) const
 		{
 			sort();
-			return std::lower_bound(m_data.begin(), m_data.end(), value, m_compare);
+			return stdr::lower_bound(m_data, value, m_compare);
 		}
 
 		const_iterator upper_bound(const T& value) const
 		{
 			sort();
-			return std::upper_bound(m_data.begin(), m_data.end(), value, m_compare);
+			return stdr::upper_bound(m_data, value, m_compare);
 		}
 
 		std::pair<const_iterator, const_iterator> equal_range(const T& value) const
 		{
 			sort();
-			return std::equal_range(m_data.begin(), m_data.end(), value, m_compare);
+			return stdr::equal_range(m_data, value, m_compare);
 		}
 
 		iterator find(const T& value)
@@ -353,6 +353,20 @@ namespace utils
 			return m_data.end() - 1;
 		}
 
+		iterator insert_keep_sorted(T&& value)
+		{
+			if (!m_sorted) return insert(std::forward<T>(value));
+			const_iterator ub = upper_bound(value);
+			return insert(ub, std::forward<T>(value));
+		}
+
+		iterator insert_keep_sorted(const T& value)
+		{
+			if (!m_sorted) return insert(value);
+			const_iterator ub = upper_bound(value);
+			return insert(ub, value);
+		}
+
 		// For std::back_inserter compatibility
 		void push_back(T&& value)
 		{
@@ -373,7 +387,7 @@ namespace utils
 		void unique()
 		{
 			sort();
-			const auto new_end = std::unique(m_data.begin(), m_data.end());
+			const auto new_end = stdr::unique(m_data);
 			m_data.erase(new_end, m_data.end());
 		}
 

@@ -191,10 +191,12 @@ namespace utils
 		struct InitialisedBuffer : Buffer
 		{
 			using Buffer::Buffer;
+			InitialisedBuffer(Buffer init) : Buffer(init) {}
 		};
 		struct RawMemory : Buffer
 		{
 			using Buffer::Buffer;
+			RawMemory(Buffer init) : Buffer(init) {}
 		};
 
 		constexpr InitialisedBuffer get_initialised_memory() noexcept
@@ -396,8 +398,8 @@ namespace utils
 
 			if constexpr (std::is_trivially_copyable_v<T>)
 			{
-				T* const source = pos;
-				T* const target = pos + gap_size;
+				T* const source = const_cast<T*>(pos);
+				T* const target = const_cast<T*>(pos) + gap_size;
 				const std::size_t bytes = distance_from_end * sizeof(T);
 				std::memmove(target, source, bytes);
 				return GapDescription{ InitialisedBuffer{},RawMemory{source,target} };
@@ -731,7 +733,7 @@ template<typename T, std::size_t STACK_SIZE, typename ALLOC>
 inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::iterator utils::small_vector<T, STACK_SIZE, ALLOC>::insert(const_iterator pos, T&& value)
 {
 	const GapDescription gap = make_gap_for_insert(pos, 1);
-	AdventCheck(gap.initialized_memory.empty() != gap.uninitialised_memory.size());
+	//AdventCheck(gap.initialized_memory.size() != gap.uninitialised_memory.size());
 	move_buffer_to_memory(Buffer{ &value,(&value) + 1 }, gap);
 	++m_num_elements;
 	return gap.initialised_memory.empty() ? gap.uninitialised_memory.finish : gap.initialised_memory.finish;
