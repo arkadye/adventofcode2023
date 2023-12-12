@@ -53,7 +53,7 @@ namespace
 		bool can_accept_input_from(Dir in_dir) const noexcept
 		{
 			const Dir reversed_in_dir = utils::turn_around(in_dir);
-			return std::ranges::find(dirs, reversed_in_dir) != end(dirs);
+			return stdr::find(dirs, reversed_in_dir) != end(dirs);
 		}
 		bool get_path_supersampled(const Coords& subcoordinate) const
 		{
@@ -61,8 +61,8 @@ namespace
 			AdventCheck(utils::range_contains_exc(subcoordinate.y, 0, 3));
 			utils::small_vector<Coords, 3> path_coords;
 			path_coords.emplace_back(1, 1);
-			std::ranges::transform(dirs, std::back_inserter(path_coords), [](Dir d) {return Coords{ 1,1 } + Coords::dir(d); });
-			const auto find_result = std::ranges::find(path_coords, subcoordinate);
+			stdr::transform(dirs, std::back_inserter(path_coords), [](Dir d) {return Coords{ 1,1 } + Coords::dir(d); });
+			const auto find_result = stdr::find(path_coords, subcoordinate);
 			return (find_result != end(path_coords));
 
 		}
@@ -77,7 +77,7 @@ namespace
 			AdventCheck(utils::range_contains_exc(subcoordinate.x, 0, 3));
 			AdventCheck(utils::range_contains_exc(subcoordinate.y, 0, 3));
 			constexpr std::array<Coords, 5> paths{ Coords{0,1},Coords{1,0}, Coords{1,1},Coords{2,1}, Coords{1,2} };
-			const auto find_result = std::ranges::find(paths, subcoordinate);
+			const auto find_result = stdr::find(paths, subcoordinate);
 			return find_result != end(paths);
 		}
 	};

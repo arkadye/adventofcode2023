@@ -119,13 +119,13 @@ namespace
 	Hand to_hand(std::string_view input)
 	{
 		Hand result;
-		std::ranges::transform(input, std::begin(result), to_card<DAY>);
+		stdr::transform(input, std::begin(result), to_card<DAY>);
 		return result;
 	}
 
 	HandType get_hand_type(const Hand& hand)
 	{
-		const auto joker_location = std::ranges::find(hand,Card::joker);
+		const auto joker_location = stdr::find(hand,Card::joker);
 		if(joker_location != end(hand))
 		{
 			const auto pos = std::distance(begin(hand),joker_location);
@@ -150,7 +150,7 @@ namespace
 		};
 		
 		const ValueMap value_count = std::accumulate(begin(hand),end(hand),ValueMap{},add_card);
-		const auto max_count = std::ranges::max(value_count);
+		const auto max_count = stdr::max(value_count);
 		switch(max_count)
 		{
 		case 5:
@@ -160,9 +160,9 @@ namespace
 		case 1:
 			return HandType::high_card;
 		case 3:
-			return std::ranges::find(value_count,2) != end(value_count) ? HandType::full_house : HandType::three_of_a_kind;
+			return stdr::find(value_count,2) != end(value_count) ? HandType::full_house : HandType::three_of_a_kind;
 		case 2:
-			return std::ranges::count(value_count,2) == 2 ? HandType::two_pair : HandType::one_pair;
+			return stdr::count(value_count,2) == 2 ? HandType::two_pair : HandType::one_pair;
 		default:
 			break;
 		}
@@ -212,7 +212,7 @@ namespace
 		using ILI = utils::istream_line_iterator;
 		HandsMap result;
 		result.reserve(1000);
-		std::ranges::transform(utils::istream_line_range{input}, std::back_inserter(result), parse_line);
+		stdr::transform(utils::istream_line_range{input}, std::back_inserter(result), parse_line);
 		return result;
 	}
 

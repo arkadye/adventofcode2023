@@ -66,14 +66,15 @@ namespace
 		
 		CoordSet empty_x_coords;
 		CoordSet empty_y_coords;
-		std::ranges::set_difference(utils::int_range{max_x+1}, x_vals_with_galaxy, std::back_inserter(empty_x_coords));
-		std::ranges::set_difference(utils::int_range{max_y+1}, y_vals_with_galaxy, std::back_inserter(empty_y_coords));
+		stdr::set_difference(utils::int_range{max_x+1}, x_vals_with_galaxy, std::back_inserter(empty_x_coords));
+		stdr::set_difference(utils::int_range{max_y+1}, y_vals_with_galaxy, std::back_inserter(empty_y_coords));
 
 		auto transform_fn = [&empty_x_coords,&empty_y_coords,scale_factor](const Galaxy& c)
 		{
-			const std::size_t x_offset = std::ranges::count_if(empty_x_coords, [x = c.x](CoordType coord){ return coord < x; });
-			const std::size_t y_offset = std::ranges::count_if(empty_y_coords, [y = c.y](CoordType coord){ return coord < y; });
-			return c + ((scale_factor-1) * Galaxy{x_offset,y_offset});
+			const CoordType x_offset = stdr::count_if(empty_x_coords, [x = c.x](CoordType coord){ return coord < x; });
+			const CoordType y_offset = stdr::count_if(empty_y_coords, [y = c.y](CoordType coord){ return coord < y; });
+			const CoordType multiplier = scale_factor - 1;
+			return  c + (/*multiplier */ Galaxy{x_offset,y_offset});
 		};
 
 		for(auto x : empty_x_coords)
@@ -89,7 +90,7 @@ namespace
 			log << "\nGalaxy at [" << galaxy << ']';
 		}
 		log << "\n... Converting with scale factor " << scale_factor << " ...";
-		std::ranges::transform(result,begin(result),transform_fn);
+		stdr::transform(result,begin(result),transform_fn);
 		for (const auto galaxy : result)
 		{
 			log << "\nGalaxy at [" << galaxy << ']';
