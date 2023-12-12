@@ -75,7 +75,7 @@ namespace
 
 	bool has_substr_at_index(std::string_view data, const std::set<std::string_view>& substr_candidates, std::size_t data_index)
 	{
-		return std::ranges::any_of(substr_candidates, [data,data_index](std::string_view substr){return has_substr_at_index(data,substr,data_index); });
+		return stdr::any_of(substr_candidates, [data,data_index](std::string_view substr){return has_substr_at_index(data,substr,data_index); });
 	}
 
 	std::size_t get_digit_at_location(std::string_view data, const SubstrToDigitMap& substr_map, std::size_t data_index)
@@ -85,7 +85,7 @@ namespace
 			return has_substr_at_index(data, substr_candidates, data_index);
 		};
 
-		const auto find_result = std::ranges::find_if(substr_map, find_pred);
+		const auto find_result = stdr::find_if(substr_map, find_pred);
 		
 		if(find_result == end(substr_map)) return std::numeric_limits<std::size_t>::max();
 
@@ -114,7 +114,7 @@ namespace
 		if(data.empty()) return 0;
 		const utils::int_range<std::size_t> index_range{0, data.size()};
 		const int64_t left_digit = get_first_of(data,substr_map,index_range);
-		const int64_t right_digit = get_first_of(data,substr_map,std::ranges::views::reverse(index_range));
+		const int64_t right_digit = get_first_of(data,substr_map,stdr::views::reverse(index_range));
 		const int64_t result = 10 * left_digit + right_digit;
 		log << "\n" << data << " --> " << result;
 		return result;

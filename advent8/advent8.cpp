@@ -29,6 +29,7 @@ namespace
 #include "sorted_vector.h"
 #include "parse_utils.h"
 #include "istream_line_iterator.h"
+#include "transform_if.h"
 
 namespace
 {
@@ -56,6 +57,7 @@ namespace
 		uint32_t m_data{0};
 #endif
 	public:
+		NodeId() {}
 		NodeId(std::string_view name, std::string_view start_node_suffix, std::string_view end_node_suffix)
 		{
 			constexpr std::string_view valid_chars{"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"};
@@ -64,14 +66,14 @@ namespace
 			const bool start = name.ends_with(start_node_suffix);
 			const bool finish = name.ends_with(end_node_suffix);
 #if DAY8DBG
-			std::ranges::copy(name,begin(m_data));
+			stdr::copy(name,begin(m_data));
 			is_start_node = start;
 			is_end_node = finish;
 #else
 			auto acc_fn = [valid_chars](uint32_t running_val , char c)
 			{
 				constexpr uint32_t max_val = 26;
-				const uint32_t incr = valid_chars.find(c);
+				const uint32_t incr = static_cast<uint32_t>(valid_chars.find(c));
 				AdventCheck(incr < valid_chars.size());
 				const uint32_t new_val = max_val * running_val + incr;
 				return new_val;
@@ -119,7 +121,7 @@ namespace
 				break;
 			}
 			AdventUnreachable();
-			return NodeId{"","",""};
+			return NodeId{};
 		}
 	};
 
@@ -128,7 +130,7 @@ namespace
 	{
 		DirectionList result;
 		result.reserve(input.size());
-		std::ranges::transform(input, std::back_inserter(result), to_direction);
+		stdr::transform(input, std::back_inserter(result), to_direction);
 		return result;
 	}
 
@@ -147,13 +149,17 @@ namespace
 
 	using NodeMap = utils::flat_map<NodeId,Junction>;
 
-	NodeMap parse_nodes(std::istream& input)
+	NodeMap parse_nodes(std::istream& input, std::string_view node_start_suffix, std::string_view node_end_suffix)
 	{
 		NodeMap result;
 		result.reserve(750);
 
-		using ILI = utils::istream_line_iterator;
-		//std::transform(ILI{input}, ILI{},std::back_inserter(result),parse_node); // TODO make istream_line_range work with std::ranges.
+		auto parse_wrapper = [node_start_suffix, node_end_suffix](std::string_view line)
+			{
+				return parse_node(line, node_start_suffix, node_end_suffix);
+			};
+
+		stdr::transform(utils::istream_line_range{input},std::back_inserter(result),parse_wrapper);
 
 		auto node_exists = [&result](NodeId id)
 		{
@@ -170,7 +176,7 @@ namespace
 			return is_junction_valid(node.second);
 		};
 
-		AdventCheck(std::ranges::all_of(result, is_valid));
+		AdventCheck(stdr::all_of(result, is_valid));
 
 		return result;
 	}
@@ -179,8 +185,6 @@ namespace
 	{
 		DirectionList direction_list;
 		NodeMap node_map;
-		utils::small_vector<NodeId,8> start_nodes;
-		utils::small_vector<NodeId,8> end_nodes;
 	};
 
 	Description parse_input(std::istream& input, std::string_view start_node_suffix, std::string_view end_node_suffix)
@@ -196,11 +200,11 @@ namespace
 			AdventCheck(line.empty());
 		}
 
-		result.node_map = parse_nodes(input);
+		result.node_map = parse_nodes(input, start_node_suffix, end_node_suffix);
 		return result;
 	}
 
-	int count_steps(const Description& desc)
+	struct PathDescription
 	{
 		int result = 0;
 		/*NodeId location = start;
@@ -212,10 +216,89 @@ namespace
 			location = junction.get_next(desc.direction_list[step_idx]);
 			++result;
 		}*/
+		int64_t cycle_start = 0;
+		int64_t cycle_end = 0;
+		std::vector<int64_t> end_points;
+	};
+
+	PathDescription get_path_description(const Description& desc, NodeId start, const auto& end_points_range)
+	{
+		auto is_end_point = [&end_points_range](NodeId node)
+			{
+				return stdr::find(end_points_range, node) != end(end_points_range);
+			};
+
+		struct LocationData
+		{
+			std::size_t path_idx{ 0 };
+			NodeId node_id{};
+			auto operator<=>(const LocationData&) const noexcept = default;
+		};
+
+		utils::flat_map<LocationData, int64_t> visited_locations;
+
+		PathDescription result;
+		NodeId current_node = start;
+		int64_t current_step = 0;
+		while (true)
+		{
+			const std::size_t path_idx = static_cast<std::size_t>(current_step % desc.direction_list.size());
+			const LocationData current_location{ path_idx,current_node };
+			const auto find_result = visited_locations.find_by_key(current_location);
+			if (find_result != end(visited_locations))
+			{
+				result.cycle_start = find_result->second;
+				result.cycle_end = current_step;
+				return result;
+			}
+
+			visited_locations[current_location] = current_step;
+			if (is_end_point(current_node))
+			{
+				result.end_points.push_back(current_step);
+			}
+
+			const Direction dir = desc.direction_list[path_idx];
+			const Junction& junc = desc.node_map.at(current_node);
+			current_node = junc.get_next(dir);
+			++current_step;
+		}
+		AdventUnreachable();
 		return result;
 	}
 
-	int solve_p1(std::istream& input)
+	int64_t count_steps(const Description& desc)
+	{
+		constexpr std::size_t max_starting_point_size = 8;
+		using SmallNodeList = utils::small_vector<NodeId, max_starting_point_size>;
+		SmallNodeList start_nodes;
+		SmallNodeList end_nodes;
+		
+		auto jn_to_node = [](const std::pair<NodeId, Junction>& n) { return n.first; };
+		auto keep_start = [](NodeId n) { return n.is_path_start(); };
+		auto keep_end = [](NodeId n) { return n.is_path_end(); };
+		utils::ranges::transform_if_post(desc.node_map, std::back_inserter(start_nodes), jn_to_node, keep_start);
+		utils::ranges::transform_if_post(desc.node_map, std::back_inserter(end_nodes), jn_to_node, keep_end);
+
+		auto node_to_path = [&desc,&end_nodes](NodeId start)
+			{
+				return get_path_description(desc, start, end_nodes);
+			};
+
+		utils::small_vector<PathDescription, max_starting_point_size> paths;
+		stdr::transform(start_nodes, std::back_inserter(paths), node_to_path);
+
+		if (paths.size() == std::size_t{ 1 })
+		{
+			const PathDescription& pd = paths[0];
+			AdventCheck(!pd.end_points.empty());
+			return pd.end_points[0];
+		}
+
+		return 0;
+	}
+
+	int64_t solve_p1(std::istream& input)
 	{
 		const Description desc = parse_input(input, "AAA", "ZZZ");
 		return count_steps(desc);
