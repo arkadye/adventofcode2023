@@ -30,6 +30,7 @@ namespace
 #include "parse_utils.h"
 #include "istream_line_iterator.h"
 #include "transform_if.h"
+#include "int_range.h"
 
 namespace
 {
@@ -47,15 +48,9 @@ namespace
 
 	class NodeId
 	{
-#if DAY8DBG
 		std::array<char,3> m_data{'\0','\0','\0'};
 		bool is_start_node = false;
 		bool is_end_node = false;
-#else
-		static constexpr std::size_t start_flag_offset = 31;
-		static constexpr std::size_t end_flag_offset = 30;
-		uint32_t m_data{0};
-#endif
 	public:
 		NodeId() {}
 		NodeId(std::string_view name, std::string_view start_node_suffix, std::string_view end_node_suffix)
@@ -65,41 +60,19 @@ namespace
 			AdventCheck(name.size() == 3);
 			const bool start = name.ends_with(start_node_suffix);
 			const bool finish = name.ends_with(end_node_suffix);
-#if DAY8DBG
+
 			stdr::copy(name,begin(m_data));
 			is_start_node = start;
 			is_end_node = finish;
-#else
-			auto acc_fn = [valid_chars](uint32_t running_val , char c)
-			{
-				constexpr uint32_t max_val = 26;
-				const uint32_t incr = static_cast<uint32_t>(valid_chars.find(c));
-				AdventCheck(incr < valid_chars.size());
-				const uint32_t new_val = max_val * running_val + incr;
-				return new_val;
-			};
-			m_data = std::accumulate(begin(name),end(name),uint32_t{0},acc_fn);
-			AdventCheck((m_data & (start_flag_offset | end_flag_offset)) == uint32_t{0});
-			m_data = m_data | ((start ? 1 : 0) << start_flag_offset);
-			m_data = m_data | ((finish ? 1 : 0) << end_flag_offset);
-#endif
 		}
 		auto operator<=>(const NodeId& other) const noexcept = default;
 		bool is_path_start() const
 		{
-#if DAY8DBG
 			return is_start_node;
-#else
-			return (start_flag_offset & m_data) != uint32_t{0};
-#endif
 		}
 		bool is_path_end() const
 		{
-#if DAY8DBG
 			return is_end_node;
-#else
-			return (end_flag_offset & m_data) != uint32_t{ 0 };
-#endif
 		}
 	};
 
@@ -252,7 +225,7 @@ namespace
 				return result;
 			}
 
-			visited_locations[current_location] = current_step;
+			visited_locations.insert_keep_sorted(std::pair{ current_location,current_step });
 			if (is_end_point(current_node))
 			{
 				result.end_points.push_back(current_step);
@@ -288,6 +261,17 @@ namespace
 		utils::small_vector<PathDescription, max_starting_point_size> paths;
 		stdr::transform(start_nodes, std::back_inserter(paths), node_to_path);
 
+		for (const PathDescription& path : paths)
+		{
+			log << "\nEnd points: [";
+			for (auto i : utils::int_range{ path.end_points.size() })
+			{
+				if (i != 0u) log << ',';
+				log << path.end_points[i];
+			}
+			log << "] Cycle: " << path.cycle_start << " -- > " << path.cycle_end;
+		}
+
 		if (paths.size() == std::size_t{ 1 })
 		{
 			const PathDescription& pd = paths[0];
@@ -295,7 +279,9 @@ namespace
 			return pd.end_points[0];
 		}
 
-		return 0;
+		// I think I can just take the LCM of the cycle lengths but I'm pretty sure this doesn't work in the general case.
+		return std::transform_reduce(begin(paths), end(paths), std::size_t{ 1 },
+			std::lcm<std::size_t, std::size_t>, [](const PathDescription& pd) {return pd.cycle_end - pd.cycle_start; });
 	}
 
 	int64_t solve_p1(std::istream& input)
@@ -307,9 +293,10 @@ namespace
 
 namespace
 {
-	int solve_p2(std::istream& input)
+	int64_t solve_p2(std::istream& input)
 	{
-		return 0;
+		const Description desc = parse_input(input, "A", "Z");
+		return count_steps(desc);
 	}
 }
 
