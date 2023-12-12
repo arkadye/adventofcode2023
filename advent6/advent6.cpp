@@ -53,7 +53,7 @@ namespace
 			return result;
 		};
 		using SLR = utils::string_line_range;
-		std::ranges::transform(SLR{times,' '},std::back_inserter(result),make_time);
+		stdr::transform(SLR{times,' '},std::back_inserter(result),make_time);
 		std::getline(input,current_line);
 		std::string_view distances = utils::remove_specific_prefix(current_line, "Distance:");
 		auto add_distance = [](std::string_view distance_str, RaceDetails& detail)
@@ -63,7 +63,7 @@ namespace
 		};
 
 		using SLI = utils::string_line_iterator;
-		std::ranges::transform(SLR{distances,' '}, result, begin(result), add_distance);
+		stdr::transform(SLR{distances,' '}, result, begin(result), add_distance);
 		return result;
 	}
 

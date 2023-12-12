@@ -40,7 +40,7 @@ namespace
 	int64_t get_next_value(const std::vector<int64_t>& vals)
 	{
 		AdventCheck(!vals.empty());
-		if (std::ranges::all_of(vals, [](int64_t v) { return v == 0; }))
+		if (stdr::all_of(vals, [](int64_t v) { return v == 0; }))
 		{
 			return 0;
 		}
@@ -67,7 +67,7 @@ namespace
 	int64_t get_next_value(std::string_view line)
 	{
 		std::vector<int64_t> vals;
-		std::ranges::transform(utils::string_line_range{ line , ' '}, std::back_inserter(vals), utils::to_value<int64_t>);
+		stdr::transform(utils::string_line_range{ line , ' '}, std::back_inserter(vals), utils::to_value<int64_t>);
 		return get_next_value<dir>(vals);
 	}
 

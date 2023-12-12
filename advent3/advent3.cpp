@@ -130,7 +130,7 @@ namespace
 					return symbols.contains_key(c);
 				};
 
-			const bool result = std::ranges::any_of(locations_to_check, has_symbol);
+			const bool result = stdr::any_of(locations_to_check, has_symbol);
 			return result;
 		}
 
@@ -141,9 +141,9 @@ namespace
 				{
 					auto find_fn = [&nl](const Coords& loc)
 						{
-							return std::ranges::find(nl.locations, loc) != end(nl.locations);
+							return stdr::find(nl.locations, loc) != end(nl.locations);
 						};
-					auto find_result = std::ranges::find_if(neighbours, find_fn);
+					auto find_result = stdr::find_if(neighbours, find_fn);
 					return (find_result != end(neighbours) ? nl.value : 0);
 				};
 

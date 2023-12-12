@@ -74,7 +74,7 @@ namespace
 		const NumberSet my_number = get_numbers(my_numbers_str);
 
 		NumberSet matching_numbers;
-		std::ranges::set_intersection(winning_numbers, my_number, std::back_inserter(matching_numbers));
+		stdr::set_intersection(winning_numbers, my_number, std::back_inserter(matching_numbers));
 		return static_cast<int>(matching_numbers.size());
 	}
 

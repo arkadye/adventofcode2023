@@ -41,7 +41,7 @@ namespace utils
 		static_assert(std::is_invocable_r_v<std::weak_ordering, ThreeWayPredicate, decltype(*start)>, "predicate must accept FwdIt::value_type as an argument, and return a std::weak_ordering");
 		if (start == finish) return finish;
 		const auto range_len = std::distance(start, finish);
-		const FwdIt midpoint = std::ranges::next(start, range_len / 2);
+		const FwdIt midpoint = stdr::next(start, range_len / 2);
 
 		const bool is_final_check = (start == midpoint);
 

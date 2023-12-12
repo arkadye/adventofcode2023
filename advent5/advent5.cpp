@@ -171,7 +171,7 @@ namespace
 				{
 					return r.is_in_range(in) || r >= in;
 				};
-			const auto relevant_transform = std::ranges::find_if(transforms, find_fn);
+			const auto relevant_transform = stdr::find_if(transforms, find_fn);
 			if(relevant_transform == end(transforms))
 			{
 				return TransformResult{ in , get_output_type() , std::nullopt };
