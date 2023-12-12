@@ -105,7 +105,7 @@ namespace
 		{
 			return check_individual_color(valid_set, description);
 		};
-		return std::ranges::all_of(Range{draw_description, ','}, check_fn);
+		return stdr::all_of(Range{draw_description, ','}, check_fn);
 	}
 
 	bool check_game(const BallSet& valid_set, std::string_view all_draws)
@@ -116,7 +116,7 @@ namespace
 			return check_draw(valid_set, draw_description);
 		};
 
-		return std::ranges::all_of(Range{ all_draws,';' }, check_fn);
+		return stdr::all_of(Range{ all_draws,';' }, check_fn);
 	}
 
 	int get_game_val(const BallSet& valid_set, std::string_view line)
