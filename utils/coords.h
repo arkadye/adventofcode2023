@@ -96,8 +96,14 @@ namespace utils
 		auto reduce() const noexcept;
 		auto manhatten_distance() const noexcept
 		{
-			auto my_abs = [](T in) { return in < static_cast<T>(0) ? -in : in; };
-			return my_abs(x) + my_abs(y);
+			if constexpr (std::is_unsigned_v<T>)
+			{
+				return x + y;
+			}
+			if constexpr (std::is_signed_v<T>)
+			{
+				return std::abs(x) + std::abs(y);
+			}
 		}
 		auto manhatten_distance(const basic_coords& other) const noexcept;
 		constexpr basic_coords(T x_, T y_) : x{ x_ }, y{ y_ }{}
@@ -114,7 +120,7 @@ namespace utils
 			return *this;
 		}
 
-		template <typename T2>
+		template <typename T2> 
 		basic_coords& operator-=(const basic_coords<T2>& other) noexcept
 		{
 			x -= other.x;
@@ -122,7 +128,7 @@ namespace utils
 			return *this;
 		}
 
-		template <typename RHSTYPE>
+		template <typename RHSTYPE>  requires std::is_arithmetic_v<RHSTYPE>
 		basic_coords& operator*=(RHSTYPE other) noexcept
 		{
 			x *= other;
@@ -130,7 +136,7 @@ namespace utils
 			return *this;
 		}
 
-		template <typename RHSTYPE>
+		template <typename RHSTYPE> requires std::is_arithmetic_v<RHSTYPE>
 		basic_coords& operator/=(RHSTYPE other) noexcept
 		{
 			AdventCheck(other != static_cast<RHSTYPE>(0));
@@ -261,24 +267,24 @@ namespace utils
 		return result;
 	}
 
-	template <typename T>
-	inline auto operator/(const basic_coords<T>& l, int r) noexcept
+	template <typename T, typename OtherType> requires std::is_arithmetic_v<OtherType>
+	inline auto operator/(const basic_coords<T>& l, OtherType r) noexcept
 	{
 		basic_coords result = l;
 		result /= r;
 		return result;
 	}
 
-	template <typename T>
-	inline auto operator*(const basic_coords<T>& l, int r) noexcept
+	template <typename T, typename OtherType> requires std::is_arithmetic_v<OtherType>
+	inline auto operator*(const basic_coords<T>& l, OtherType r) noexcept
 	{
 		basic_coords result = l;
 		result *= r;
 		return result;
 	}
 
-	template <typename T>
-	inline auto operator*(int l, const basic_coords<T>& r) noexcept
+	template <typename T, typename OtherType> requires std::is_arithmetic_v<OtherType>
+	inline auto operator*(OtherType l, const basic_coords<T>& r) noexcept
 	{
 		return r * l;
 	}
