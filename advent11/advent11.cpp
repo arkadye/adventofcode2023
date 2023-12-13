@@ -74,7 +74,7 @@ namespace
 			const CoordType x_offset = stdr::count_if(empty_x_coords, [x = c.x](CoordType coord){ return coord < x; });
 			const CoordType y_offset = stdr::count_if(empty_y_coords, [y = c.y](CoordType coord){ return coord < y; });
 			const CoordType multiplier = scale_factor - 1;
-			return  c + (/*multiplier */ Galaxy{x_offset,y_offset});
+			return  c + (multiplier * Galaxy{x_offset,y_offset});
 		};
 
 		for(auto x : empty_x_coords)
