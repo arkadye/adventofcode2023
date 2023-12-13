@@ -207,3 +207,12 @@ constexpr const char* TEST_TEN_H =
 R"(F-S
 |.|
 L-J)";
+
+#define TEST_TWELVE_A "???.### 1,1,3"
+#define TEST_TWELVE_B ".??..??...?##. 1,1,3"
+#define TEST_TWELVE_C "?#?#?#?#?#?#?#? 1,3,1,6"
+#define TEST_TWELVE_D "????.#...#... 4,1,1"
+#define TEST_TWELVE_E "????.######..#####. 1,6,5"
+#define TEST_TWELVE_F "?###???????? 3,2,1"
+
+static const auto TEST_TWELVE_G = advent::combine_inputs(TEST_TWELVE_A, TEST_TWELVE_B, TEST_TWELVE_C, TEST_TWELVE_D, TEST_TWELVE_E, TEST_TWELVE_F);
