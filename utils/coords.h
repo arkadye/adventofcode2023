@@ -233,6 +233,151 @@ namespace utils
 			result.y = utils::to_value<T>(y);
 			return result;
 		}
+
+/*		class base_iterator : public std::random_access_iterator_tag
+		{
+		protected:
+			basic_coords<T> current_location;
+			constexpr auto cmp(const base_iterator& other) const noexcept
+			{
+				return current_location <=> other.current_location;
+			}
+		public:
+			constexpr explicit base_iterator(basic_coords init) noexcept : current_location{init}{}
+			constexpr base_iterator(const base_iterator&) noexcept = default;
+			constexpr base_iterator& operator=(const base_iterator&) noexcept = default;
+			constexpr auto operator<=>(const base_iterator&) const noexcept = default;
+			constexpr bool operator*() const noexcept { return current_location; }
+		};
+
+		class range_base
+		{
+		protected:
+			basic_coords<T> start, finish;
+		public:
+			range_base(const basic_coords<T>& first, const basic_coords<T>& last) : start{first}, finish{last}{}
+		};
+
+		class row_iterator : public base_iterator
+		{
+			void check_other(const row_iterator& other) const
+			{
+				AdventCheck(current_location.y == other.y);
+			}
+		public:
+			using difference_type = decltype(T{} - T{});
+			using value_type = basic_coords<T>;
+			using pointer = basic_coords<T>*;
+			using reference = basic_coords<T>&;
+			using iterator_category = std::random_access_iterator_tag;
+			template <std::integral RHSTYPE>
+			constexpr row_iterator& operator+(RHSTYPE rhs) noexcept { current_location.x += rhs; return *this; }
+			constexpr row_iterator& operator++() noexcept { return (*this) += 1; }
+			constexpr row_iterator operator++(int) noexcept { auto result = *this; ++(*this); return result; }
+			template <std::integral RHSTYPE>
+			constexpr row_iterator& operator-(RHSTYPE rhs) noexcept { current_location.x -= rhs; return *this; }
+			constexpr row_iterator& operator--() noexcept { return (*this) -= 1; }
+			constexpr row_iterator operator--(int) noexcept { auto result = *this; --(*this); return result; }
+			constexpr difference_type operator-(const row_iterator& other) const { check_other(other); return other.x - current_location.x; }
+			constexpr auto operator<=>(const row_iterator& other) const
+			{
+				check_other(other);
+				return cmp(other);
+			}
+			constexpr auto operator==(const row_iterator& other) const { return (*this <=> other) == 0; }
+		};
+
+		class row_range : public range_base
+		{
+		public:
+			row_range(const basic_coords<T>& first, const basic_coords<T>& last) : range_base{first,last}
+			{
+				AdventCheck(first.y == last.y);
+			}
+			row_iterator begin() const noexcept { return row_iterator{start}; }
+			row_iterator end() const noexcept { return row_iterator{finish}; }
+		};
+
+		class column_iterator : public base_iterator
+		{
+			void check_other(const column_iterator& other) const
+			{
+				AdventCheck(current_location.x == other.x);
+			}
+		public:
+			using difference_type = decltype(T{} - T{});
+			using value_type = basic_coords<T>;
+			using pointer = basic_coords<T>*;
+			using reference = basic_coords<T>&;
+			using iterator_category = std::random_access_iterator_tag;
+			template <std::integral RHSTYPE>
+			constexpr column_iterator& operator+(RHSTYPE rhs) noexcept { current_location.y += rhs; return *this; }
+			constexpr column_iterator& operator++() noexcept { return (*this) += 1; }
+			constexpr column_iterator operator++(int) noexcept { auto result = *this; ++(*this); return result; }
+			template <std::integral RHSTYPE>
+			constexpr column_iterator& operator-(RHSTYPE rhs) noexcept { current_location.y -= rhs; return *this; }
+			constexpr column_iterator& operator--() noexcept { return (*this) -= 1; }
+			constexpr column_iterator operator--(int) noexcept { auto result = *this; --(*this); return result; }
+			constexpr difference_type operator-(const column_iterator& other) const { check_other(other); return other.y - current_location.y; }
+			constexpr auto operator<=>(const column_iterator& other) const
+			{
+				check_other(other);
+				return cmp(other);
+			}
+			constexpr bool operator==(const column_iterator& other) const { return (*this <=> other) == 0; }
+		};
+
+		class column_range : public range_base
+		{
+		public:
+			column_range(const basic_coords<T>& first, const basic_coords<T>& last) : range_base{ first,last }
+			{
+				AdventCheck(first.x == last.x);
+			}
+			column_iterator begin() const noexcept { return column_iterator{ start }; }
+			column_iterator end() const noexcept { return column_iterator{ finish }; }
+		};
+
+		class area_iterator : public base_iterator
+		{
+			T x_min, x_max;
+			void check_other(const area_iterator& other) const
+			{
+				AdventCheck(x_min == other.x_min);
+				AdventCheck(x_max == other.x_max);
+			}
+		public:
+			using difference_type = decltype(T{} - T{});
+			using value_type = basic_coords<T>;
+			using pointer = basic_coords<T>*;
+			using reference = basic_coords<T>&;
+			using iterator_category = std::random_access_iterator_tag;
+			area_iterator(const basic_coords<T>& coords, T min, T max) : area_iterator{coords}{ x_min = min; x_max = max; }
+			template <std::integral RHSTYPE>
+			constexpr area_iterator& operator+(RHSTYPE rhs) noexcept { current_location.y += rhs; return *this; }
+			constexpr area_iterator& operator++() noexcept { return (*this) += 1; }
+			constexpr area_iterator operator++(int) noexcept { auto result = *this; ++(*this); return result; }
+			template <std::integral RHSTYPE>
+			constexpr area_iterator& operator-(RHSTYPE rhs) noexcept { current_location.y -= rhs; return *this; }
+			constexpr area_iterator& operator--() noexcept { return (*this) -= 1; }
+			constexpr area_iterator operator--(int) noexcept { auto result = *this; --(*this); return result; }
+			constexpr difference_type operator-(const area_iterator& other) const { check_other(other); return other.y - current_location.y; }
+			constexpr auto operator<=>(const area_iterator& other) const
+			{
+				check_other(other);
+				return cmp(other);
+			}
+			constexpr bool operator==(const area_iterator& other) const { return (*this <=> other) == 0; }
+		};
+
+		class area_range : public range_base
+		{
+		public:
+			area_range(const basic_coords<T>& first, const basic_coords<T>& last) : range_base{ first,last } {}
+			area_iterator begin() const noexcept { return area_iterator{ start , start.x, finish.x }; }
+			area_iterator end() const noexcept { return area_iterator{ finish , start.x, finish.x }; }
+		};
+*/
 	};
 
 	using coords = basic_coords<int>;
