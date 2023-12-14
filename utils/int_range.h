@@ -63,7 +63,7 @@ namespace utils
 
 		constexpr int_range<INT> reverse() const noexcept
 		{
-			return int_range<INT>{ max, min - 1, -stride };
+			return int_range<INT>{ max - stride, min - stride, -stride };
 		}
 
 		INDEX_ITERATOR_MEMBER_BOILERPLATE_CONST(int_range<INT>)
