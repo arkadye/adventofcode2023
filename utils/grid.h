@@ -44,43 +44,31 @@ namespace utils
 			resize(utils::coords{ new_x,new_y });
 		}
 
+		std::size_t size() const noexcept {	return m_nodes.size(); }
+
 		NodeType& at(int x, int y) { return m_nodes[get_idx(x,y)]; }
 		const NodeType& at(int x, int y) const { return m_nodes[get_idx(x,y)]; }
 		NodeType& at(utils::coords coords) { return at(coords.x,coords.y); }
 		const NodeType& at(utils::coords coords) const { return at(coords.x,coords.y); }
 
 		// Get all nodes that meet a predicate
-		utils::small_vector<coords,1> get_all_coordinates_by_predicate(auto predicate) const
+		utils::small_vector<utils::coords,1> get_all_coordinates_by_predicate(const auto& predicate) const
 		{
+			using utils::coords;
 			utils::small_vector<coords, 1> result;
-			for (int x : utils::int_range{ m_max_point.x })
-			{
-				for (int y : utils::int_range{ m_max_point.y })
-				{
-					const NodeType& elem = at(x, y);
-					if (predicate(elem))
-					{
-						result.push_back(utils::coords{ x,y });
-					}
-				}
-			}
+			auto projection = [this](const coords& c) -> const NodeType& { return at(c); };
+			stdr::copy_if(coords_area_range{ m_max_point }, std::back_inserter(result), predicate, projection);
 			return result;
 		}
 
 		// Get a node using a predicate
-		std::optional<utils::coords> get_coordinates_by_predicate(auto predicate) const
+		std::optional<utils::coords> get_coordinates_by_predicate(const auto& predicate) const
 		{
-			for (int x : utils::int_range{m_max_point.x})
-			{
-				for(int y : utils::int_range{m_max_point.y})
-				{
-					const NodeType& elem = at(x,y);
-					if (predicate(elem))
-					{
-						return utils::coords{x,y};
-					}
-				}
-			}
+			using utils::coords;
+			auto range = coords_area_range{ m_max_point };
+			const auto projection = [this](const coords& c) -> const NodeType& { return at(c); };
+			const auto result = stdr::find_if(range, predicate, projection);
+			if (result != end(range)) return *result;
 			return std::nullopt;
 		}
 
