@@ -9,6 +9,7 @@
 #include "../advent/advent_assert.h"
 #include "split_string.h"
 #include "to_value.h"
+#include "index_iterator.h"
 
 namespace utils
 {
@@ -233,151 +234,182 @@ namespace utils
 			result.y = utils::to_value<T>(y);
 			return result;
 		}
+	};
 
-/*		class base_iterator : public std::random_access_iterator_tag
-		{
-		protected:
-			basic_coords<T> current_location;
-			constexpr auto cmp(const base_iterator& other) const noexcept
-			{
-				return current_location <=> other.current_location;
-			}
-		public:
-			constexpr explicit base_iterator(basic_coords init) noexcept : current_location{init}{}
-			constexpr base_iterator(const base_iterator&) noexcept = default;
-			constexpr base_iterator& operator=(const base_iterator&) noexcept = default;
-			constexpr auto operator<=>(const base_iterator&) const noexcept = default;
-			constexpr bool operator*() const noexcept { return current_location; }
-		};
+	// Range of coords with a constant y
+	template <std::integral INT>
+	class coords_row_range
+	{
+		INT x_start;
+		INT x_finish;
+		INT y_const;
+	public:
+		// Typedefs
+		using value_type = basic_coords<INT>;
+		using reference_type = basic_coords<INT>;
+		using pointer_type = basic_coords<INT>*;
+		using size_type = std::size_t;
+		using difference_type = std::ptrdiff_t;
 
-		class range_base
-		{
-		protected:
-			basic_coords<T> start, finish;
-		public:
-			range_base(const basic_coords<T>& first, const basic_coords<T>& last) : start{first}, finish{last}{}
-		};
+		constexpr coords_row_range(INT start_x, INT finish_x, INT const_y) noexcept : x_start{ start_x }, x_finish{ finish_x }, y_const{ const_y }
+		{}
 
-		class row_iterator : public base_iterator
+		constexpr coords_row_range(const basic_coords<INT>& start, INT finish) noexcept : coords_row_range{ start.x,finish,start.y } {}
+		constexpr coords_row_range(const basic_coords<INT>& start, const basic_coords<INT>& finish) noexcept : coords_row_range{ start,finish.x, start.y }
 		{
-			void check_other(const row_iterator& other) const
-			{
-				AdventCheck(current_location.y == other.y);
-			}
-		public:
-			using difference_type = decltype(T{} - T{});
-			using value_type = basic_coords<T>;
-			using pointer = basic_coords<T>*;
-			using reference = basic_coords<T>&;
-			using iterator_category = std::random_access_iterator_tag;
-			template <std::integral RHSTYPE>
-			constexpr row_iterator& operator+(RHSTYPE rhs) noexcept { current_location.x += rhs; return *this; }
-			constexpr row_iterator& operator++() noexcept { return (*this) += 1; }
-			constexpr row_iterator operator++(int) noexcept { auto result = *this; ++(*this); return result; }
-			template <std::integral RHSTYPE>
-			constexpr row_iterator& operator-(RHSTYPE rhs) noexcept { current_location.x -= rhs; return *this; }
-			constexpr row_iterator& operator--() noexcept { return (*this) -= 1; }
-			constexpr row_iterator operator--(int) noexcept { auto result = *this; --(*this); return result; }
-			constexpr difference_type operator-(const row_iterator& other) const { check_other(other); return other.x - current_location.x; }
-			constexpr auto operator<=>(const row_iterator& other) const
-			{
-				check_other(other);
-				return cmp(other);
-			}
-			constexpr auto operator==(const row_iterator& other) const { return (*this <=> other) == 0; }
-		};
+			AdventCheck(start.y == finish.y);
+		}
+		constexpr coords_row_range(INT start, const basic_coords<INT>& finish) noexcept : coords_row_range{ start,finish.x,finish.y } {}
+		explicit constexpr coords_row_range(const basic_coords<INT>& finish) noexcept : coords_row_range{ INT{0},finish } {}
 
-		class row_range : public range_base
+		constexpr value_type operator[](std::size_t idx) const noexcept
 		{
-		public:
-			row_range(const basic_coords<T>& first, const basic_coords<T>& last) : range_base{first,last}
-			{
-				AdventCheck(first.y == last.y);
-			}
-			row_iterator begin() const noexcept { return row_iterator{start}; }
-			row_iterator end() const noexcept { return row_iterator{finish}; }
-		};
+			const bool going_forward = x_start <= x_finish;
+			const INT x_out = (going_forward ? x_start + idx : x_start - idx);
+			return value_type{ x_out, y_const };
+		}
 
-		class column_iterator : public base_iterator
+		constexpr size_type size() const noexcept
 		{
-			void check_other(const column_iterator& other) const
-			{
-				AdventCheck(current_location.x == other.x);
-			}
-		public:
-			using difference_type = decltype(T{} - T{});
-			using value_type = basic_coords<T>;
-			using pointer = basic_coords<T>*;
-			using reference = basic_coords<T>&;
-			using iterator_category = std::random_access_iterator_tag;
-			template <std::integral RHSTYPE>
-			constexpr column_iterator& operator+(RHSTYPE rhs) noexcept { current_location.y += rhs; return *this; }
-			constexpr column_iterator& operator++() noexcept { return (*this) += 1; }
-			constexpr column_iterator operator++(int) noexcept { auto result = *this; ++(*this); return result; }
-			template <std::integral RHSTYPE>
-			constexpr column_iterator& operator-(RHSTYPE rhs) noexcept { current_location.y -= rhs; return *this; }
-			constexpr column_iterator& operator--() noexcept { return (*this) -= 1; }
-			constexpr column_iterator operator--(int) noexcept { auto result = *this; --(*this); return result; }
-			constexpr difference_type operator-(const column_iterator& other) const { check_other(other); return other.y - current_location.y; }
-			constexpr auto operator<=>(const column_iterator& other) const
-			{
-				check_other(other);
-				return cmp(other);
-			}
-			constexpr bool operator==(const column_iterator& other) const { return (*this <=> other) == 0; }
-		};
+			const auto [x_min, x_max] = std::minmax(x_start, x_finish);
+			const auto result = x_max - x_min;
+			return static_cast<size_type>(result);
+		}
 
-		class column_range : public range_base
+		constexpr value_type front() const noexcept { return (*this)[0]; }
+		constexpr value_type back() const noexcept { return (*this)[size() - 1]; }
+		constexpr coords_row_range<INT> reverse() const noexcept
 		{
-		public:
-			column_range(const basic_coords<T>& first, const basic_coords<T>& last) : range_base{ first,last }
-			{
-				AdventCheck(first.x == last.x);
-			}
-			column_iterator begin() const noexcept { return column_iterator{ start }; }
-			column_iterator end() const noexcept { return column_iterator{ finish }; }
-		};
+			const bool going_forward = x_start <= x_finish;
+			const INT new_start = going_forward ? x_finish - 1 : x_finish + 1;
+			const INT new_finish = going_forward ? x_start - 1 : x_start + 1;
+			return coords_row_range<INT>{new_start, new_finish, y_const};
+		}
 
-		class area_iterator : public base_iterator
-		{
-			T x_min, x_max;
-			void check_other(const area_iterator& other) const
-			{
-				AdventCheck(x_min == other.x_min);
-				AdventCheck(x_max == other.x_max);
-			}
-		public:
-			using difference_type = decltype(T{} - T{});
-			using value_type = basic_coords<T>;
-			using pointer = basic_coords<T>*;
-			using reference = basic_coords<T>&;
-			using iterator_category = std::random_access_iterator_tag;
-			area_iterator(const basic_coords<T>& coords, T min, T max) : area_iterator{coords}{ x_min = min; x_max = max; }
-			template <std::integral RHSTYPE>
-			constexpr area_iterator& operator+(RHSTYPE rhs) noexcept { current_location.y += rhs; return *this; }
-			constexpr area_iterator& operator++() noexcept { return (*this) += 1; }
-			constexpr area_iterator operator++(int) noexcept { auto result = *this; ++(*this); return result; }
-			template <std::integral RHSTYPE>
-			constexpr area_iterator& operator-(RHSTYPE rhs) noexcept { current_location.y -= rhs; return *this; }
-			constexpr area_iterator& operator--() noexcept { return (*this) -= 1; }
-			constexpr area_iterator operator--(int) noexcept { auto result = *this; --(*this); return result; }
-			constexpr difference_type operator-(const area_iterator& other) const { check_other(other); return other.y - current_location.y; }
-			constexpr auto operator<=>(const area_iterator& other) const
-			{
-				check_other(other);
-				return cmp(other);
-			}
-			constexpr bool operator==(const area_iterator& other) const { return (*this <=> other) == 0; }
-		};
+		INDEX_ITERATOR_MEMBER_BOILERPLATE(coords_row_range<INT>);
+	};
 
-		class area_range : public range_base
+	// Range of coords with a constant x
+	template <std::integral INT>
+	class coords_column_range
+	{
+		INT y_start;
+		INT y_finish;
+		INT x_const;
+	public:
+		// Typedefs
+		using value_type = basic_coords<INT>;
+		using reference_type = basic_coords<INT>;
+		using pointer_type = basic_coords<INT>*;
+		using size_type = std::size_t;
+		using difference_type = std::ptrdiff_t;
+
+		constexpr coords_column_range(INT start_y, INT finish_y, INT const_x) noexcept : y_start{ start_y }, y_finish{ finish_y }, x_const{ const_x }
+		{}
+
+		constexpr coords_column_range(const basic_coords<INT>& start, INT finish) noexcept : coords_column_range{ start.y,finish,start.x } {}
+		constexpr coords_column_range(const basic_coords<INT>& start, const basic_coords<INT>& finish) noexcept : coords_column_range{ start,finish.y, start.x }
 		{
-		public:
-			area_range(const basic_coords<T>& first, const basic_coords<T>& last) : range_base{ first,last } {}
-			area_iterator begin() const noexcept { return area_iterator{ start , start.x, finish.x }; }
-			area_iterator end() const noexcept { return area_iterator{ finish , start.x, finish.x }; }
-		};
-*/
+			AdventCheck(start.x == finish.x);
+		}
+		constexpr coords_column_range(INT start, const basic_coords<INT>& finish) noexcept : coords_column_range{ start,finish.y,finish.x } {}
+		explicit constexpr coords_column_range(const basic_coords<INT>& finish) noexcept : coords_column_range{ INT{0},finish } {}
+
+		constexpr value_type operator[](std::size_t idy) const noexcept
+		{
+			const bool going_forward = y_start <= y_finish;
+			const INT y_out = (going_forward ? y_start + idy : y_start - idy);
+			return value_type{ y_out, x_const };
+		}
+
+		constexpr size_type size() const noexcept
+		{
+			const auto [y_min, y_max] = std::minmax(y_start, y_finish);
+			const auto result = y_max - y_min;
+			return static_cast<size_type>(result);
+		}
+
+		constexpr value_type front() const noexcept { return (*this)[0]; }
+		constexpr value_type back() const noexcept { return (*this)[size() - 1]; }
+		constexpr coords_column_range<INT> reverse() const noexcept
+		{
+			const bool going_forward = y_start <= y_finish;
+			const INT new_start = going_forward ? y_finish - 1 : y_finish + 1;
+			const INT new_finish = going_forward ? y_start - 1 : y_start + 1;
+			return coords_column_range<INT>{new_start, new_finish, x_const};
+		}
+
+		INDEX_ITERATOR_MEMBER_BOILERPLATE(coords_column_range<INT>);
+	};
+
+	// Range of coords with a constant y
+	template <std::integral INT>
+	class coords_area_range
+	{
+		basic_coords<INT> start;
+		basic_coords<INT> finish;
+	public:
+		// Typedefs
+		using value_type = basic_coords<INT>;
+		using reference_type = basic_coords<INT>;
+		using pointer_type = basic_coords<INT>*;
+		using size_type = std::size_t;
+		using difference_type = std::ptrdiff_t;
+
+		constexpr coords_area_range(const basic_coords<INT>& first, const basic_coords<INT>& last) : start{ first }, finish{ last } {}
+		constexpr explicit coords_area_range(const basic_coords<INT>& last) : coords_area_range{ basic_coords<INT>{},last } {}
+
+		constexpr value_type operator[](std::size_t idx) const noexcept
+		{
+			const bool going_right = start.x <= finish.x;
+			const bool going_up = start.y <= finish.y;
+			const INT y_offset = static_cast<INT>(idx / width());
+			const INT x_offset = static_cast<INT>(idx % width());
+			const INT x_result = going_right ? start.x + x_offset : start.x - x_offset;
+			const INT y_result = going_up ? start.y + y_offset : start.y - y_offset;
+			return value_type{ x_result,y_result };
+		}
+
+		constexpr size_type width() const noexcept
+		{
+			const auto [x_min, x_max] = std::minmax(start.x, finish.x);
+			const auto result = x_max - x_min;
+			return static_cast<size_type>(result);
+		}
+
+		constexpr size_type height() const noexcept
+		{
+			const auto [y_min, y_max] = std::minmax(start.y, finish.y);
+			const auto result = y_max - y_min;
+			return static_cast<size_type>(result);
+		}
+
+		constexpr size_type size() const noexcept
+		{
+			return width() * height();
+		}
+
+		constexpr value_type front() const noexcept { return (*this)[0]; }
+		constexpr value_type back() const noexcept { return (*this)[size() - 1]; }
+		constexpr coords_area_range<INT> reverse() const noexcept
+		{
+			const bool going_right = start.x <= finish.x;
+			const bool going_up = start.y <= finish.y;
+			auto transform = [going_right, going_up](const basic_coords<INT>& c)
+				{
+					if constexpr (std::is_unsigned_v<INT>)
+					{
+						AdventCheck(c.x != 0);
+						AdventCheck(c.y != 0);
+					}
+					const auto new_x = going_right ? c.x - 1 : c.x + 1;
+					const auto new_y = going_up ? c.y - 1 : c.y + 1;
+					return basic_coords<INT>{new_x, new_y};
+				};
+			return coords_area_range<INT>{transform(finish), transform(start)};
+		}
+
+		INDEX_ITERATOR_MEMBER_BOILERPLATE(coords_area_range<INT>);
 	};
 
 	using coords = basic_coords<int>;
