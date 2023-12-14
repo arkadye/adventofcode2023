@@ -237,10 +237,10 @@ namespace
 
 	enum class SearchState
 	{
-		outside_unexpanded, outside_expanded, inside, path
+		outside, inside, path
 	};
 
-	int solve_p2(std::istream& input)
+	int64_t solve_p2(std::istream& input)
 	{
 		const Grid grid = parse_input(input);
 		const Coords max_coords = grid.get_max_point();
@@ -248,6 +248,9 @@ namespace
 		utils::grid<SearchState> big_grid;
 		const Coords big_max_coords = 3 * max_coords;
 		big_grid.resize(big_max_coords, SearchState::inside);
+
+		std::vector<Coords> coords_to_check;
+		coords_to_check.reserve(big_grid.size());
 
 		for (int y : utils::int_range{ big_max_coords.y })
 		{
@@ -267,69 +270,41 @@ namespace
 
 				SearchState& sample = big_grid.at(Coords{ x,y });
 				if (is_pipe) sample = SearchState::path;
-				else if (is_edge) sample = SearchState::outside_unexpanded;
+				else if (is_edge) coords_to_check.emplace_back(x, y);
 				else AdventCheck(sample == SearchState::inside);
 			}
 		}
 
-		while (true)
+		while (!coords_to_check.empty())
 		{
-			bool has_unexpanded = false;
-			for (int y : utils::int_range{ big_max_coords.y })
-			{
-				for (int x : utils::int_range{ big_max_coords.x })
+			const Coords check_these = coords_to_check.back();
+			coords_to_check.pop_back();
+			SearchState& sample = big_grid.at(check_these);
+			AdventCheck(sample != SearchState::path);
+			if (sample == SearchState::outside) continue;
+			sample = SearchState::outside;
+			auto copy_pred = [&big_grid](const Coords& c)
 				{
-					const Coords loc{ x,y };
-					SearchState& sample = big_grid.at(loc);
-					if (sample != SearchState::outside_unexpanded) continue;
-
-					has_unexpanded = true;
-					sample = SearchState::outside_expanded;
-					for (const Coords& neighbour : loc.neighbours())
-					{
-						if (!big_grid.is_on_grid(neighbour)) continue;
-
-						SearchState& neighbour_sample = big_grid.at(neighbour);
-
-						if (neighbour_sample != SearchState::inside) continue;
-
-						neighbour_sample = SearchState::outside_unexpanded;
-					}
-				}
-			}
-
-			if (!has_unexpanded) break;
+					return big_grid.is_on_grid(c) && big_grid.at(c) == SearchState::inside;
+				};
+			stdr::copy_if(check_these.neighbours(), std::back_inserter(coords_to_check), copy_pred);
 		}
 
-		int inside_bits = 0;
-		for (int y : utils::int_range{ max_coords.y })
-		{
-			for (int x : utils::int_range{ max_coords.x })
+		auto is_big_grid_sample_outside = [&big_grid](const Coords& c)
 			{
-				const Coords coords{ x,y };
-				const Coords big_coords_base = 3 * coords;
-				bool is_inside = true;
-				for (int sy : utils::int_range{ 3 })
-				{
-					for (int sx : utils::int_range{ 3 })
-					{
-						const Coords big_coords = big_coords_base + Coords{ sx,sy };
-						const SearchState sample = big_grid.at(big_coords);
-						AdventCheck(sample != SearchState::outside_unexpanded);
-						if (sample == SearchState::outside_expanded)
-						{
-							is_inside = false;
-							break;
-						}
-					}
-					if (!is_inside) break;
-				}
-				if (is_inside)
-				{
-					++inside_bits;
-				}
-			}
-		}
+				AdventCheck(big_grid.is_on_grid(c));
+				const SearchState s = big_grid.at(c);
+				return s == SearchState::outside;
+			};
+
+		auto is_square_inside = [&is_big_grid_sample_outside](const Coords& c)
+			{
+				const Coords first = 3 * c;
+				const Coords last = first + Coords{ 3,3 };
+				return stdr::none_of(utils::coords_area_range{ first,last }, is_big_grid_sample_outside);
+			};
+
+		const int64_t inside_bits = stdr::count_if(utils::coords_area_range{ max_coords }, is_square_inside);
 		return inside_bits;
 	}
 }
