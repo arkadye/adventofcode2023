@@ -21,8 +21,29 @@ namespace
 #endif
 }
 
+#include "grid.h"
+
 namespace
 {
+	enum class Tile : char
+	{
+		ash = '.',
+		rock = '#'
+	};
+
+	Tile to_tile(char c)
+	{
+		AdventCheck(c == '.' || c == '#');
+		return static_cast<Tile>(c);
+	}
+
+	using Grid = utils::grid<Tile>;
+
+	Grid parse_grid(std::istream& input)
+	{
+		return utils::grid_helpers::build(input,to_tile);
+	}
+
 	int solve_p1(std::istream& input)
 	{
 		return 0;
@@ -35,6 +56,16 @@ namespace
 	{
 		return 0;
 	}
+}
+
+ResultType testcase_thirteen_p1(std::istream& input)
+{
+	return solve_p1(input);
+}
+
+ResultType testcase_thirteen_p2(std::istream& input)
+{
+	return solve_p1(input);
 }
 
 ResultType advent_thirteen_p1()
