@@ -118,6 +118,20 @@ namespace utils
 		utils::small_vector<utils::coords,1> get_path(const utils::coords& start, const utils::coords& end) const;
 	};
 
+	template <typename GridType, typename CoordsRangeType>
+	class grid_view_iterator_base
+	{
+		GridType* underlying_grid = nullptr;
+		CoordsRangeType underlying_range;
+		void check_it(const grid_view_iterator_base& other)
+		{
+			AdventCheck(&underlying_grid == &other.underlying_grid);
+		}
+	public:
+		grid_view_iterator_base() noexcept = default;
+
+	};
+
 	namespace grid_helpers
 	{
 		template <typename NodeType, typename FnType>
