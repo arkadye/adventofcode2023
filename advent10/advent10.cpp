@@ -252,27 +252,27 @@ namespace
 		std::vector<Coords> coords_to_check;
 		coords_to_check.reserve(big_grid.size());
 
-		for (int y : utils::int_range{ big_max_coords.y })
+		for (const Coords& c : utils::coords_area_elem_range(big_max_coords))
 		{
+			const int x = c.x;
+			const int y = c.y;
 			const int small_y = y / 3;
 			const int sub_y = y % 3;
 			const bool is_vertical_edge = (y == 0 || y == big_max_coords.y - 1);
-			for (int x : utils::int_range{ big_max_coords.x })
-			{
-				AdventCheck(big_grid.is_on_grid(Coords{ x,y }));
-				const int small_x = x / 3;
-				const int sub_x = x % 3;
-				const bool is_horizontal_edge = (x == 0 || x == big_max_coords.x - 1);
-				const bool is_edge = is_vertical_edge || is_horizontal_edge;
 
-				const Tile& tile = grid.at(Coords{ small_x,small_y });
-				const bool is_pipe = get_path_supersampled(tile, Coords{ sub_x,sub_y });
+			AdventCheck(big_grid.is_on_grid(Coords{ x,y }));
+			const int small_x = x / 3;
+			const int sub_x = x % 3;
+			const bool is_horizontal_edge = (x == 0 || x == big_max_coords.x - 1);
+			const bool is_edge = is_vertical_edge || is_horizontal_edge;
 
-				SearchState& sample = big_grid.at(Coords{ x,y });
-				if (is_pipe) sample = SearchState::path;
-				else if (is_edge) coords_to_check.emplace_back(x, y);
-				else AdventCheck(sample == SearchState::inside);
-			}
+			const Tile& tile = grid.at(Coords{ small_x,small_y });
+			const bool is_pipe = get_path_supersampled(tile, Coords{ sub_x,sub_y });
+
+			SearchState& sample = big_grid.at(Coords{ x,y });
+			if (is_pipe) sample = SearchState::path;
+			else if (is_edge) coords_to_check.emplace_back(x, y);
+			else AdventCheck(sample == SearchState::inside);
 		}
 
 		while (!coords_to_check.empty())
@@ -301,10 +301,10 @@ namespace
 			{
 				const Coords first = 3 * c;
 				const Coords last = first + Coords{ 3,3 };
-				return stdr::none_of(utils::coords_area_range{ first,last }, is_big_grid_sample_outside);
+				return stdr::none_of(utils::coords_area_elem_range(first,last), is_big_grid_sample_outside);
 			};
 
-		const int64_t inside_bits = stdr::count_if(utils::coords_area_range{ max_coords }, is_square_inside);
+		const int64_t inside_bits = stdr::count_if(utils::coords_area_elem_range(max_coords), is_square_inside);
 		return inside_bits;
 	}
 }

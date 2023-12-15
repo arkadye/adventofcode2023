@@ -9,7 +9,7 @@
 #include "../advent/advent_assert.h"
 #include "split_string.h"
 #include "to_value.h"
-#include "index_iterator.h"
+#include "int_range.h"
 
 namespace utils
 {
@@ -236,306 +236,140 @@ namespace utils
 		}
 	};
 
-	// Range of coords with a constant y
-	template <std::integral INT>
-	class coords_row_range
+	template <std::integral T>
+	inline auto coords_area_elem_range(basic_coords<T> start, basic_coords<T> finish)
 	{
-		INT x_start;
-		INT x_finish;
-		INT y_const;
-	public:
-		// Typedefs
-		using value_type = basic_coords<INT>;
-		using reference_type = basic_coords<INT>;
-		using pointer_type = basic_coords<INT>*;
-		using size_type = std::size_t;
-		using difference_type = std::ptrdiff_t;
-
-		constexpr coords_row_range() noexcept : coords_column_range{0,0,0}{}
-		constexpr coords_row_range(INT start_x, INT finish_x, INT const_y) noexcept : x_start{ start_x }, x_finish{ finish_x }, y_const{ const_y }
-		{}
-
-		constexpr coords_row_range(const basic_coords<INT>& start, INT finish) noexcept : coords_row_range{ start.x,finish,start.y } {}
-		constexpr coords_row_range(const basic_coords<INT>& start, const basic_coords<INT>& finish) noexcept : coords_row_range{ start,finish.x, start.y }
-		{
-			AdventCheck(start.y == finish.y);
-		}
-		constexpr coords_row_range(INT start, const basic_coords<INT>& finish) noexcept : coords_row_range{ start,finish.x,finish.y } {}
-		explicit constexpr coords_row_range(const basic_coords<INT>& finish) noexcept : coords_row_range{ INT{0},finish } {}
-
-		constexpr coords_row_range& operator=(const coords_row_range&) = default;
-
-		constexpr value_type operator[](std::size_t idx) const noexcept
-		{
-			AdventCheck(idx < size());
-			const bool going_forward = x_start <= x_finish;
-			const INT x_out = (going_forward ? x_start + idx : x_start - idx);
-			return value_type{ x_out, y_const };
-		}
-
-		constexpr size_type size() const noexcept
-		{
-			const auto [x_min, x_max] = std::minmax(x_start, x_finish);
-			const auto result = x_max - x_min;
-			return static_cast<size_type>(result);
-		}
-
-		constexpr value_type front() const noexcept { return (*this)[0]; }
-		constexpr value_type back() const noexcept { return (*this)[size() - 1]; }
-		constexpr coords_row_range<INT> reverse() const noexcept
-		{
-			const bool going_forward = x_start <= x_finish;
-			const INT new_start = going_forward ? x_finish - 1 : x_finish + 1;
-			const INT new_finish = going_forward ? x_start - 1 : x_start + 1;
-			return coords_row_range<INT>{new_start, new_finish, y_const};
-		}
-
-		INDEX_ITERATOR_MEMBER_BOILERPLATE(coords_row_range<INT>);
-	};
-
-	// Range of coords with a constant x
-	template <std::integral INT>
-	class coords_column_range
-	{
-		INT y_start;
-		INT y_finish;
-		INT x_const;
-	public:
-		// Typedefs
-		using value_type = basic_coords<INT>;
-		using reference_type = basic_coords<INT>;
-		using pointer_type = basic_coords<INT>*;
-		using size_type = std::size_t;
-		using difference_type = std::ptrdiff_t;
-
-		constexpr coords_column_range() noexcept : coords_column_range{0,0,0}{}
-		constexpr coords_column_range(INT start_y, INT finish_y, INT const_x) noexcept : y_start{ start_y }, y_finish{ finish_y }, x_const{ const_x }
-		{}
-
-		constexpr coords_column_range(const basic_coords<INT>& start, INT finish) noexcept : coords_column_range{ start.y,finish,start.x } {}
-		constexpr coords_column_range(const basic_coords<INT>& start, const basic_coords<INT>& finish) noexcept : coords_column_range{ start,finish.y, start.x }
-		{
-			AdventCheck(start.x == finish.x);
-		}
-		constexpr coords_column_range(INT start, const basic_coords<INT>& finish) noexcept : coords_column_range{ start,finish.y,finish.x } {}
-		explicit constexpr coords_column_range(const basic_coords<INT>& finish) noexcept : coords_column_range{ INT{0},finish } {}
-
-		constexpr coords_column_range& operator=(const coords_column_range&) = default;
-
-		constexpr value_type operator[](std::size_t idy) const noexcept
-		{
-			AdventCheck(idx < size());
-			const bool going_forward = y_start <= y_finish;
-			const INT y_out = (going_forward ? y_start + idy : y_start - idy);
-			return value_type{ y_out, x_const };
-		}
-
-		constexpr size_type size() const noexcept
-		{
-			const auto [y_min, y_max] = std::minmax(y_start, y_finish);
-			const auto result = y_max - y_min;
-			return static_cast<size_type>(result);
-		}
-
-		constexpr value_type front() const noexcept { return (*this)[0]; }
-		constexpr value_type back() const noexcept { return (*this)[size() - 1]; }
-		constexpr coords_column_range<INT> reverse() const noexcept
-		{
-			const bool going_forward = y_start <= y_finish;
-			const INT new_start = going_forward ? y_finish - 1 : y_finish + 1;
-			const INT new_finish = going_forward ? y_start - 1 : y_start + 1;
-			return coords_column_range<INT>{new_start, new_finish, x_const};
-		}
-
-		INDEX_ITERATOR_MEMBER_BOILERPLATE(coords_column_range<INT>);
-	};
-
-	// Range of coords which cover an area.
-	template <std::integral INT>
-	class coords_area_elem_range
-	{
-		basic_coords<INT> start;
-		basic_coords<INT> finish;
-	public:
-		// Typedefs
-		using value_type = basic_coords<INT>;
-		using reference_type = basic_coords<INT>;
-		using pointer_type = basic_coords<INT>*;
-		using size_type = std::size_t;
-		using difference_type = std::ptrdiff_t;
-
-		constexpr coords_area_elem_range() noexcept = default;
-		constexpr coords_area_elem_range(const basic_coords<INT>& first, const basic_coords<INT>& last) : start{ first }, finish{ last } {}
-		constexpr explicit coords_area_elem_range(const basic_coords<INT>& last) : coords_area_elem_range{ basic_coords<INT>{},last } {}
-
-		constexpr coords_area_elem_range& operator=(const coords_area_elem_range&) = default;
-
-		constexpr value_type operator[](std::size_t idx) const noexcept
-		{
-			AdventCheck(idx < size());
-			const bool going_right = start.x <= finish.x;
-			const bool going_up = start.y <= finish.y;
-			const INT y_offset = static_cast<INT>(idx / width());
-			const INT x_offset = static_cast<INT>(idx % width());
-			const INT x_result = going_right ? start.x + x_offset : start.x - x_offset;
-			const INT y_result = going_up ? start.y + y_offset : start.y - y_offset;
-			return value_type{ x_result,y_result };
-		}
-
-		constexpr size_type width() const noexcept
-		{
-			const auto [x_min, x_max] = std::minmax(start.x, finish.x);
-			const auto result = x_max - x_min;
-			return static_cast<size_type>(result);
-		}
-
-		constexpr size_type height() const noexcept
-		{
-			const auto [y_min, y_max] = std::minmax(start.y, finish.y);
-			const auto result = y_max - y_min;
-			return static_cast<size_type>(result);
-		}
-
-		constexpr size_type size() const noexcept
-		{
-			return width() * height();
-		}
-
-		constexpr value_type front() const noexcept { return (*this)[0]; }
-		constexpr value_type back() const noexcept { return (*this)[size() - 1]; }
-		constexpr coords_area_range<INT> reverse() const noexcept
-		{
-			const bool going_right = start.x <= finish.x;
-			const bool going_up = start.y <= finish.y;
-			auto transform = [going_right, going_up](const basic_coords<INT>& c)
-				{
-					if constexpr (std::is_unsigned_v<INT>)
-					{
-						AdventCheck(c.x != 0);
-						AdventCheck(c.y != 0);
-					}
-					const auto new_x = going_right ? c.x - 1 : c.x + 1;
-					const auto new_y = going_up ? c.y - 1 : c.y + 1;
-					return basic_coords<INT>{new_x, new_y};
-				};
-			return coords_area_elem_range<INT>{transform(finish), transform(start)};
-		}
-
-		INDEX_ITERATOR_MEMBER_BOILERPLATE(coords_area_elem_range<INT>);
-	};
-
-	// Range of row ranges which cover an area.
-	template <std::integral INT>
-	class coords_area_row_range
-	{
-		basic_coords<INT> start;
-		basic_coords<INT> finish;
-	public:
-		// Typedefs
-		using value_type = coords_row_range<INT>;
-		using reference_type = coords_row_range<INT>;
-		using pointer_type = coords_row_range<INT>*;
-		using size_type = std::size_t;
-		using difference_type = std::ptrdiff_t;
-
-		constexpr coords_area_row_range() noexcept = default;
-		constexpr coords_area_row_range(const basic_coords<INT>& first, const basic_coords<INT>& last) noexcept : start{ first }, finish{ last } {}
-		constexpr explicit coords_area_row_range(const basic_coords<INT>& last) noexcept : coords_area_row_range{ basic_coords<INT>{},last } {}
-
-		constexpr value_type operator[](std::size_t idx) const noexcept
-		{
-			AdventCheck(idx < size());
-			const bool going_up = start.y <= finish.y;
-			const INT y = going_up ? start.y + idx : start.y - idx;
-			return value_type{start.x,finish.x,y};
-		}
-
-		constexpr size_type size() const noexcept
-		{
-			const auto [min_y , max_y] = std::minmax(start.y, finish.y);
-			return static_cast<size_type>(max_y - min_y);
-		}
-
-		constexpr value_type front() const noexcept { return (*this)[0]; }
-		constexpr value_type back() const noexcept { return (*this)[size() - 1]; }
-		constexpr coords_area_row_range<INT> reverse() const noexcept
-		{
-			const bool going_right = start.x <= finish.x;
-			const bool going_up = start.y <= finish.y;
-			auto transform = [going_right, going_up](const basic_coords<INT>& c)
+		const auto [min_x, max_x] = std::minmax(start.x, finish.x);
+		const auto [min_y, max_y] = std::minmax(start.y, finish.y);
+		const std::size_t width = static_cast<std::size_t>(max_x - min_x);
+		const std::size_t height = static_cast<std::size_t>(max_y - min_y);
+		const std::size_t size = height * width;
+		auto deref = [start, finish, width, size](std::size_t idx)
 			{
-				if constexpr (std::is_unsigned_v<INT>)
-				{
-					AdventCheck(c.x != 0);
-					AdventCheck(c.y != 0);
-				}
-				const auto new_x = going_right ? c.x - 1 : c.x + 1;
-				const auto new_y = going_up ? c.y - 1 : c.y + 1;
-				return basic_coords<INT>{new_x, new_y};
+				AdventCheck(idx < size);
+				const bool goes_right = start.x <= finish.x;
+				const bool goes_up = start.y <= finish.y;
+				const T x_offset = static_cast<T>(idx % width);
+				const T y_offset = static_cast<T>(idx / width);
+				const T x = goes_right ? start.x + x_offset : start.x - x_offset;
+				const T y = goes_up ? start.y + y_offset : start.y - y_offset;
+				return basic_coords<T>{x, y};
 			};
-			return coords_area_row_range<INT>{transform(finish), transform(start)};
-		}
+		std::invoke_result_t<decltype(deref), std::size_t> x = basic_coords<T>{};
+		return int_range_adaptor{ std::move(deref),size };
+	}
 
-		INDEX_ITERATOR_MEMBER_BOILERPLATE(coords_area_row_range<INT>);
-	};
+	template <std::integral T>
+	using coords_area_elem_range_t = decltype(coords_area_elem_range(basic_coords<T>{}, basic_coords<T>{}));
 
-	// Range of row ranges which cover an area.
-	template <std::integral INT>
-	class coords_area_column_range
+	template <std::integral T>
+	inline coords_area_elem_range_t<T> coords_area_elem_range(basic_coords<T> finish)
 	{
-		basic_coords<INT> start;
-		basic_coords<INT> finish;
-	public:
-		// Typedefs
-		using value_type = coords_row_range<INT>;
-		using reference_type = coords_row_range<INT>;
-		using pointer_type = coords_row_range<INT>*;
-		using size_type = std::size_t;
-		using difference_type = std::ptrdiff_t;
+		return coords_area_elem_range<T>(basic_coords<T>{}, finish);
+	}
 
-		constexpr coords_area_column_range() noexcept = default;
-		constexpr coords_area_column_range(const basic_coords<INT>& first, const basic_coords<INT>& last) noexcept : start{ first }, finish{ last } {}
-		constexpr explicit coords_area_column_range(const basic_coords<INT>& last) noexcept : coords_area_column_range{ basic_coords<INT>{},last } {}
-		constexpr coords_area_column_range(const coords_area_column_range&) noexcept = default;
+	template <std::integral T>
+	inline coords_area_elem_range_t<T> coords_row_range(basic_coords<T> start, basic_coords<T> finish)
+	{
+		AdventCheck(start.y == finish.y);
+		++finish.y;
+		return coords_area_elem_range<T>(start, finish);
+	}
 
-		constexpr value_type operator[](std::size_t idx) const noexcept
-		{
-			AdventCheck(idx < size());
-			const bool going_up = start.x <= finish.x;
-			const INT x = going_up ? start.x + idx : start.x - idx;
-			return value_type{ start.y,finish.y,x };
-		}
+	template <std::integral T>
+	inline coords_area_elem_range_t<T> coords_row_range(basic_coords<T> start, T x_finish)
+	{
+		return coords_row_range<T>(start, basic_coords<T>{x_finish, start.y});
+	}
 
-		constexpr size_type size() const noexcept
-		{
-			const auto [min_x, max_x] = std::minmax(start.x, finish.x);
-			return static_cast<size_type>(max_x - min_x);
-		}
+	template <std::integral T>
+	inline coords_area_elem_range_t<T> coords_row_range(T x_start, basic_coords<T> finish)
+	{
+		return coords_row_range<T>(basic_coords<T>{x_start, finish.y}, finish);
+	}
 
-		constexpr value_type front() const noexcept { return (*this)[0]; }
-		constexpr value_type back() const noexcept { return (*this)[size() - 1]; }
-		constexpr coords_area_row_range<INT> reverse() const noexcept
-		{
-			const bool going_right = start.x <= finish.x;
-			const bool going_up = start.y <= finish.y;
-			auto transform = [going_right, going_up](const basic_coords<INT>& c)
+	template <std::integral T>
+	inline coords_area_elem_range_t<T> coords_row_range(T x_start, T x_finish, T y_const)
+	{
+		return coords_row_range<T>(basic_coords<T>{x_start, y_const}, basic_coords<T>{x_finish, y_const});
+	}
+
+	template <std::integral T>
+	inline auto coords_area_rows_range(basic_coords<T> start, basic_coords<T> finish)
+	{
+		const auto [min_y, max_y] = std::minmax(start.y, finish.y);
+		const auto size = static_cast<std::size_t>(max_y - min_y);
+		auto deref_fn = [start, finish, size](std::size_t idx)
 			{
-				if constexpr (std::is_unsigned_v<INT>)
-				{
-					AdventCheck(c.x != 0);
-					AdventCheck(c.y != 0);
-				}
-				const auto new_x = going_right ? c.x - 1 : c.x + 1;
-				const auto new_y = going_up ? c.y - 1 : c.y + 1;
-				return basic_coords<INT>{new_x, new_y};
+				AdventCheck(idx < size);
+				const bool going_up = start.y <= finish.y;
+				const T y = going_up ? start.y + idx : start.y - idx;
+				return coords_row_range(start.x, finish.x, y);
 			};
-			return coords_area_row_range<INT>{transform(finish), transform(start)};
-		}
+		return int_range_adaptor{ deref_fn, size };
+	}
 
-		INDEX_ITERATOR_MEMBER_BOILERPLATE(coords_area_column_range<INT>);
-	};
+	template <std::integral T>
+	using coords_area_rows_range_t = decltype(coords_area_rows_range<T>(basic_coords<T>{}, basic_coords<T>{}));
 
-	using coords = basic_coords<int64_t>;
+	template <std::integral T>
+	inline coords_area_rows_range_t<T> coords_area_rows_range(basic_coords<T> finish)
+	{
+		return coords_area_rows_range(basic_coords<T>{}, finish);
+	}
+
+	template <std::integral T>
+	inline coords_area_elem_range_t<T> coords_column_range(basic_coords<T> start, basic_coords<T> finish)
+	{
+		AdventCheck(start.x == finish.x);
+		++finish.x;
+		return coords_area_elem_range<T>(start, finish);
+	}
+
+	template <std::integral T>
+	inline coords_area_elem_range_t<T> coords_column_range(basic_coords<T> start, T y_finish)
+	{
+		return coords_column_range<T>(start, basic_coords<T>{start.x,y_finish});
+	}
+
+	template <std::integral T>
+	inline coords_area_elem_range_t<T> coords_column_range(T y_start, basic_coords<T> finish)
+	{
+		return coords_column_range<T>(basic_coords<T>{finish.x, y_start}, finish);
+	}
+
+	template <std::integral T>
+	inline coords_area_elem_range_t<T> coords_column_range(T y_start, T y_finish, T x_const)
+	{
+		return coords_column_range<T>(basic_coords<T>{x_const, y_start}, basic_coords<T>{x_const, y_finish});
+	}
+
+	template <std::integral T>
+	inline auto coords_area_columns_range(basic_coords<T> start, basic_coords<T> finish)
+	{
+		const auto [min_x, max_x] = std::minmax(start.x, finish.x);
+		const auto size = static_cast<std::size_t>(max_x - min_x);
+		auto deref_fn = [start, finish, size](std::size_t idx)
+			{
+				AdventCheck(idx < size);
+				const bool going_right = start.x <= finish.x;
+				const T x = going_right ? start.x + idx : start.x - idx;
+				return coords_column_range(start.y, finish.y, x);
+			};
+		return int_range_adaptor{ deref_fn, size };
+	}
+
+	template <std::integral T>
+	using coords_area_columns_range_t = decltype(coords_area_columns_range<T>(basic_coords<T>{}, basic_coords<T>{}));
+
+	template <std::integral T>
+	inline coords_area_columns_range_t<T> coords_area_columns_range(basic_coords<T> finish)
+	{
+		return coords_area_columns_range(basic_coords<T>{}, finish);
+	}
+
+	using coords = basic_coords<int32_t>;
+	using coords64 = basic_coords<int64_t>;
 
 	inline double pi()
 	{

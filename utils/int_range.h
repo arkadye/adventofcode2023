@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <iterator>
 #include <compare>
+#include <type_traits>
+
 #include "index_iterator.h"
 
 namespace utils
@@ -69,5 +71,66 @@ namespace utils
 		INDEX_ITERATOR_MEMBER_BOILERPLATE_CONST(int_range<INT>)
 	};
 
+	template <typename AdaptorFn> requires std::regular_invocable<AdaptorFn,std::size_t>
+	class int_range_adaptor
+	{
+		int_range<std::size_t> range;
+		AdaptorFn adaptor_fn;
+		constexpr int_range_adaptor(AdaptorFn fn, int_range<std::size_t> rng) noexcept : adaptor_fn{ std::move(fn) }, range{ rng } {}
+	public:
+		// Typedefs
+		using reference_type = std::invoke_result_t<AdaptorFn, std::size_t>;
+		using value_type = std::remove_cvref_t<reference_type>;
+		using pointer_type = value_type*;
+		using size_type = std::size_t;
+		using difference_type = std::ptrdiff_t;
+
+		// Constructors
+		constexpr int_range_adaptor(AdaptorFn fn, std::size_t start, std::size_t finish, std::size_t stride_length) noexcept :
+			int_range_adaptor{ std::move(fn) , int_range<std::size_t>{start,finish,stride_length} } {}
+		constexpr int_range_adaptor(AdaptorFn fn, std::size_t start, std::size_t finish) noexcept
+			: int_range_adaptor{ std::move(fn), start,finish,1 } {}
+		constexpr int_range_adaptor(AdaptorFn fn, std::size_t finish) noexcept : int_range_adaptor{ std::move(fn), 0,finish } {}
+		constexpr int_range_adaptor(AdaptorFn fn) : int_range_adaptor{ std::move(fn), 0 } {}
+
+		constexpr decltype(auto) operator[](std::size_t pos) const noexcept {
+			AdventCheck(pos < size());
+			return adaptor_fn(pos);
+		}
+
+		constexpr decltype(auto) operator[](std::size_t pos) noexcept {
+			AdventCheck(pos < size());
+			return adaptor_fn(pos);
+		}
+
+		constexpr decltype(auto) front() const noexcept {
+			return (*this)[0];
+		}
+
+		constexpr decltype(auto) front() noexcept
+		{
+			return (*this)[0];
+		}
+
+		constexpr decltype(auto) back() const noexcept {
+			return (*this)[size() - 1];
+		}
+
+		constexpr decltype(auto) back() noexcept {
+			return (*this)[size() - 1];
+		}
+
+		// Operations
+		constexpr size_type  size() const noexcept {
+			return range.size();
+		}
+
+		constexpr int_range_adaptor<AdaptorFn> reverse() const noexcept
+		{
+			return int_range_adaptor<AdaptorFn>{ adaptor_fn, range.reverse() };
+		}
+
+		INDEX_ITERATOR_MEMBER_BOILERPLATE_CONST(int_range_adaptor<AdaptorFn>)
+	};
 }
 
