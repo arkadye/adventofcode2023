@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <optional>
 #include <algorithm>
+#include <concepts>
 
 #include "../advent/advent_assert.h"
 #include "istream_line_iterator.h"
@@ -32,6 +33,9 @@ namespace utils
 		utils::coords m_max_point;
 		std::size_t get_idx(int64_t x, int64_t y) const;
 	public:
+		using value_type = NodeType;
+		using reference_type = NodeType&;
+		using const_reference_type = const NodeType&;
 		bool is_on_grid(int64_t x, int64_t y) const;
 		bool is_on_grid(utils::coords coords) const { return is_on_grid(coords.x,coords.y); }
 		utils::coords get_max_point() const noexcept { return m_max_point; }
@@ -96,7 +100,7 @@ namespace utils
 				++m_max_point.y;
 			}
 #if AOC_GRID_DEBUG
-			std::cout << "Created grid with dimenstions [" << m_max_point << '\n';
+			std::cout << "Created grid with dimensions [" << m_max_point << '\n';
 #endif
 		}
 
@@ -117,20 +121,6 @@ namespace utils
 			const auto& cost_or_heuristic_fn) const;
 
 		utils::small_vector<utils::coords,1> get_path(const utils::coords& start, const utils::coords& end) const;
-	};
-
-	template <typename GridType, typename CoordsRangeType>
-	class grid_view_iterator_base
-	{
-		GridType* underlying_grid = nullptr;
-		CoordsRangeType underlying_range;
-		void check_it(const grid_view_iterator_base& other)
-		{
-			AdventCheck(&underlying_grid == &other.underlying_grid);
-		}
-	public:
-		grid_view_iterator_base() noexcept = default;
-
 	};
 
 	namespace grid_helpers
@@ -213,6 +203,146 @@ namespace utils
 				}
 				return std::nullopt;
 			}
+		};
+
+		template <typename T>
+		concept grid_type = requires { std::is_same_v<T,grid<typename T::value_type>> || std::is_same_v<T,const grid<typename T::value_type>>; };
+
+		namespace internal_helpers
+		{
+			template <grid_type T>
+			struct node_ref_type {};
+
+			template <typename T>
+			struct node_ref_type<const grid<T>>
+			{
+				using type = typename T::const_reference;
+			};
+
+			template <typename T>
+			struct node_ref_type<grid<T>>
+			{
+				using type = typename T::reference;
+			};
+
+			template <grid_type T>
+			using node_ref_type_t = typename node_ref_type<T>::type;
+
+			using underlying_range_t = utils::coords_iterators::elem_range<int>;
+			template <grid_type GridType>
+			class elem_adaptor
+			{
+				GridType& underlying_grid;
+				underlying_range_t underlying_range;
+			public:
+				elem_adaptor(GridType& in_grid, const underlying_range_t& in_range) noexcept
+					: underlying_grid{in_grid}, underlying_range{in_range}{}
+				node_ref_type_t<GridType> operator()(std::size_t idx) const noexcept
+				{
+					const auto coords = underlying_range[idx];
+					return underlying_grid.at(coords);
+				}
+			};
+
+			template <grid_type T>
+			using elem_view_base = int_range_adaptor<elem_adaptor<T>>;
+		}
+
+		template <grid_type T>
+		class elem_view : public internal_helpers::elem_view_base<T>
+		{
+		public:
+			elem_view(T& in_grid, const internal_helpers::underlying_range_t& range)
+				: internal_helpers::elem_view_base<T>{ internal_helpers::elem_adaptor{in_grid , range} , range.size() }{}
+		};
+
+		template <grid_type T, typename...Args>
+		inline elem_view<T> get_elem_view(T& in_grid, const Args&... args) noexcept
+		{
+			return elem_view<T>{in_grid, internal_helpers::underlying_range_t{ Args... } };
+		}
+
+		template <grid_type T, typename...Args>
+		inline elem_view<T> get_row_elem_view(T& in_grid, const Args&...args) noexcept
+		{
+			return elem_view<T>{in_grid, internal_helpers::underlying_range_t::get_row(args...) };
+		}
+
+		template <grid_type T, typename...Args>
+		inline elem_view<T> get_column_elem_view(T& in_grid, const Args&...args) noexcept
+		{
+			return elem_view<T>{in_grid, internal_helpers::underlying_range_t::get_column(args...) };
+		}
+
+		template <grid_type LeftGrid, grid_type RightGrid> requires std::three_way_comparable_with<typename LeftGrid::value_type, typename RightGrid::value_type>
+		auto operator<=>(const elem_view<LeftGrid>& left, const elem_view<RightGrid>& right) noexcept
+		{
+			return stdr::lexicographical_compare(left, right);
+		}
+
+		namespace internal_helpers
+		{
+			template <grid_type T>
+			class row_view_adaptor
+			{
+				T& underlying_grid;
+				utils::coords start, finish;
+			public:
+				row_view_adaptor(T& in_grid, const utils::coords& first, const utils::coords& last)
+					: underlying_grid{ in_grid }, start{ first }, finish{ last }{}
+				elem_view<T> operator[](std::size_t idx) const noexcept
+				{
+					AdventCheck(idx < coords_iterators::internal_helpers::height(start,finish));
+					const auto y = coords_iterators::internal_helpers::get_at_idx(start.y,finish.y,idx);
+					return get_row_elem_view(underlying_grid,start.x,finish.x,y);
+				}
+			};
+
+			template <grid_type T>
+			class column_view_adaptor
+			{
+				T& underlying_grid;
+				utils::coords start, finish;
+			public:
+				column_view_adaptor(T& in_grid, const utils::coords& first, const utils::coords& last)
+					: underlying_grid{in_grid},start{first},finish{last}{}
+				elem_view<T> operator[](std::size_t idx) const noexcept
+				{
+					AdventCheck(idx < coords_iterators::internal_helpers::width(start, finish));
+					const auto x = coords_iterators::internal_helpers::get_at_idx(start.x, finish.x, idx);
+					return get_column_elem_view(underlying_grid, x, start.y,finish.y);
+				}
+			};
+
+			template <grid_type T>
+			using row_view_base = int_range_adaptor<row_view_adaptor<T>>;
+
+			template <grid_type T>
+			using column_view_base = int_range_adaptor<column_view_adaptor<T>>;
+		}
+
+		template <grid_type T>
+		class row_view : public internal_helpers::row_view_base<T>
+		{	
+		public:
+			row_view(T& in_grid, const utils::coords& first, const utils::coords& last) noexcept
+				: internal_helpers::row_view_base<T>{in_grid,first,last}{}
+			row_view(T& in_grid, const utils::coords& last) noexcept
+				: row_view{in_grid , utils::coords{0,0} , last}{}
+			explicit row_view(T& in_grid)
+				: row_view{ in_grid , in_grid.get_max_point() } {}
+		};
+
+		template <grid_type T>
+		class column_view : public internal_helpers::column_view_base<T>
+		{
+		public:
+			column_view(T& in_grid, const utils::coords& first, const utils::coords& last) noexcept
+				: internal_helpers::column_view_base<T>{ in_grid,first,last } {}
+			column_view(T& in_grid, const utils::coords& last) noexcept
+				: column_view{ in_grid , utils::coords{0,0} , last } {}
+			explicit column_view(T& in_grid)
+				: column_view{ in_grid , in_grid.get_max_point() } {}
 		};
 	}
 }
