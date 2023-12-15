@@ -8,6 +8,7 @@
 #include "../advent/advent_assert.h"
 #include "istream_line_iterator.h"
 #include "coords.h"
+#include "coords_iterators.h"
 #include "int_range.h"
 #include "small_vector.h"
 
@@ -57,15 +58,15 @@ namespace utils
 			using utils::coords;
 			utils::small_vector<coords, 1> result;
 			auto projection = [this](const coords& c) -> const NodeType& { return at(c); };
-			stdr::copy_if(coords_area_elem_range(m_max_point), std::back_inserter(result), predicate, projection);
+			stdr::copy_if(utils::coords_iterators::elem_range{m_max_point}, std::back_inserter(result), predicate, projection);
 			return result;
 		}
 
 		// Get a node using a predicate
 		std::optional<utils::coords> get_coordinates_by_predicate(const auto& predicate) const
 		{
-			using utils::coords;
-			auto range = coords_area_elem_range(m_max_point);
+
+			const utils::coords_iterators::elem_range range{m_max_point};
 			const auto projection = [this](const coords& c) -> const NodeType& { return at(c); };
 			const auto result = stdr::find_if(range, predicate, projection);
 			if (result != end(range)) return *result;

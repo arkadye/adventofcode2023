@@ -252,7 +252,7 @@ namespace
 		std::vector<Coords> coords_to_check;
 		coords_to_check.reserve(big_grid.size());
 
-		for (const Coords& c : utils::coords_area_elem_range(big_max_coords))
+		for (const Coords& c : utils::coords_iterators::elem_range{ big_max_coords })
 		{
 			const int x = c.x;
 			const int y = c.y;
@@ -301,10 +301,10 @@ namespace
 			{
 				const Coords first = 3 * c;
 				const Coords last = first + Coords{ 3,3 };
-				return stdr::none_of(utils::coords_area_elem_range(first,last), is_big_grid_sample_outside);
+				return stdr::none_of(utils::coords_iterators::elem_range{ first,last }, is_big_grid_sample_outside);
 			};
 
-		const int64_t inside_bits = stdr::count_if(utils::coords_area_elem_range(max_coords), is_square_inside);
+		const int64_t inside_bits = stdr::count_if(utils::coords_iterators::elem_range{ max_coords }, is_square_inside);
 		return inside_bits;
 	}
 }

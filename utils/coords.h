@@ -236,7 +236,7 @@ namespace utils
 		}
 	};
 
-	template <std::integral T>
+	/*template <std::integral T>
 	inline auto coords_area_elem_range(basic_coords<T> start, basic_coords<T> finish)
 	{
 		const auto [min_x, max_x] = std::minmax(start.x, finish.x);
@@ -366,7 +366,7 @@ namespace utils
 	inline coords_area_columns_range_t<T> coords_area_columns_range(basic_coords<T> finish)
 	{
 		return coords_area_columns_range(basic_coords<T>{}, finish);
-	}
+	}*/
 
 	using coords = basic_coords<int32_t>;
 	using coords64 = basic_coords<int64_t>;
