@@ -85,6 +85,9 @@ namespace utils
 		using size_type = std::size_t;
 		using difference_type = std::ptrdiff_t;
 
+		const AdaptorFn& get_adapter() const noexcept { return adaptor_fn; }
+		const int_range<std::size_t>& get_underlying_range() const noexcept { return range; }
+
 		// Constructors
 		constexpr int_range_adaptor(AdaptorFn fn, std::size_t start, std::size_t finish, std::size_t stride_length) noexcept :
 			int_range_adaptor{ std::move(fn) , int_range<std::size_t>{start,finish,stride_length} } {}
