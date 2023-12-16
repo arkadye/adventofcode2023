@@ -24,7 +24,7 @@ namespace advent
 	inline std::string combine_inputs(std::string_view first_string, StringViews...remaining)
 	{
 		std::ostringstream collector;
-		std::string joiner('\n',NUM_NEWLINES);
+		std::string joiner(NUM_NEWLINES, '\n');
 		collector << first_string;
 		return combine_inputs_internal::impl(joiner, collector, remaining...);
 	}
