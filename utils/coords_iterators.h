@@ -17,11 +17,23 @@ namespace utils::coords_iterators
 		}
 
 		template <std::integral T>
+		inline constexpr std::ptrdiff_t swidth(const basic_coords<T>& first, const basic_coords<T>& last) noexcept
+		{
+			return static_cast<std::ptrdiff_t>(width(first, last));
+		}
+
+		template <std::integral T>
 		inline constexpr std::size_t height(const basic_coords<T>& first, const basic_coords<T>& last) noexcept
 		{
 			const auto [y_min, y_max] = std::minmax(first.y, last.y);
 			const auto h = y_max - y_min;
 			return static_cast<std::size_t>(h);
+		}
+
+		template <std::integral T>
+		inline constexpr std::ptrdiff_t sheight(const basic_coords<T>& first, const basic_coords<T>& last) noexcept
+		{
+			return static_cast<std::ptrdiff_t>(height(first, last));
 		}
 
 		template <std::integral T>
@@ -33,7 +45,13 @@ namespace utils::coords_iterators
 		}
 
 		template <std::integral T>
-		inline std::size_t get_at_idx(T first, T last, std::size_t idx)
+		inline constexpr std::ptrdiff_t ssize(const basic_coords<T>& first, const basic_coords<T>& last) noexcept
+		{
+			return static_cast<std::ptrdiff_t>(size(first, last));
+		}
+
+		template <std::integral T>
+		inline T get_at_idx(T first, T last, std::size_t idx)
 		{
 			const bool incrementing = (first <= last);
 			const T tidx = static_cast<T>(idx);
@@ -47,7 +65,7 @@ namespace utils::coords_iterators
 			basic_coords<T> start;
 			basic_coords<T> finish;
 		public:
-			constexpr elem_adaptor(const basic_coords<T>& first, const basic_coords<T>& last) : start{ first }, finish{ last }{}
+			constexpr elem_adaptor(const basic_coords<T>& first, const basic_coords<T>& last) : start{ first }, finish{ last } {}
 			constexpr basic_coords<T> operator()(std::size_t idx) const noexcept
 			{
 				AdventCheck(idx < size(start, finish));
@@ -69,9 +87,9 @@ namespace utils::coords_iterators
 	{
 	public:
 		constexpr elem_range(const basic_coords<T>& first, const basic_coords<T>& last) noexcept
-			: internal_helpers::elem_range_base<T>{ internal_helpers::elem_adaptor{first,last} , internal_helpers::size(first,last) }
-			{}
-		explicit constexpr elem_range(const basic_coords<T>& last) noexcept : elem_range{basic_coords<T>{},last}{}
+			: internal_helpers::elem_range_base<T>{ internal_helpers::elem_adaptor{first,last} , internal_helpers::ssize(first,last) }
+		{}
+		explicit constexpr elem_range(const basic_coords<T>& last) noexcept : elem_range{ basic_coords<T>{},last } {}
 
 		static elem_range<T> get_row(T x_start, T x_finish, T y_const) noexcept
 		{
@@ -99,18 +117,18 @@ namespace utils::coords_iterators
 		static elem_range<T> get_column(T x_const, T y_start, T y_finish) noexcept
 		{
 			const basic_coords<T> first{ x_const,y_start };
-			const basic_coords<T> last{ x_const,y_finish + 1 };
+			const basic_coords<T> last{ x_const + 1,y_finish };
 			return elem_range<T>{first, last};
 		}
 
-		static elem_range<T> get_coumn(const basic_coords<T>& first, T y_finish) noexcept
+		static elem_range<T> get_column(const basic_coords<T>& first, T y_finish) noexcept
 		{
 			return get_column(first.x, first.y, y_finish);
 		}
 
 		static elem_range<T> get_column(T y_start, const basic_coords<T>& finish) noexcept
 		{
-			return get_column(finish.x, y_start,finish.y);
+			return get_column(finish.x, y_start, finish.y);
 		}
 
 		static elem_range<T> get_column(const basic_coords<T>& start, const basic_coords<T>& finish) noexcept
@@ -119,7 +137,7 @@ namespace utils::coords_iterators
 			return get_column(start, finish.y);
 		}
 	};
-	
+
 	namespace internal_helpers
 	{
 		template <std::integral T>
@@ -128,12 +146,12 @@ namespace utils::coords_iterators
 			basic_coords<T> start;
 			basic_coords<T> finish;
 		public:
-			constexpr row_adaptor(const basic_coords<T>& first, const basic_coords<T>& last) noexcept : start{first} , finish{last}{}
+			constexpr row_adaptor(const basic_coords<T>& first, const basic_coords<T>& last) noexcept : start{ first }, finish{ last } {}
 			constexpr elem_range<T> operator[](std::size_t idx) const noexcept
 			{
-				AdventCheck(idx < height(start,finish));
-				const T y = get_at_idx(start.y,finish.y,idx);
-				return elem_range<T>::get_row(start.x,finish.x,y);
+				AdventCheck(idx < height(start, finish));
+				const T y = get_at_idx(start.y, finish.y, idx);
+				return elem_range<T>::get_row(start.x, finish.x, y);
 			}
 		};
 
@@ -146,12 +164,12 @@ namespace utils::coords_iterators
 			basic_coords<T> start;
 			basic_coords<T> finish;
 		public:
-			constexpr column_adaptor(const basic_coords<T>& first, const basic_coords<T>& last) noexcept : start{ first }, finish{ last }{}
+			constexpr column_adaptor(const basic_coords<T>& first, const basic_coords<T>& last) noexcept : start{ first }, finish{ last } {}
 			constexpr elem_range<T> operator[](std::size_t idx) const noexcept
 			{
 				AdventCheck(idx < width(start, finish));
 				const T x = get_at_idx(start.x, finish.x, idx);
-				return elem_range<T>::get_column(x, start.y,finish.y);
+				return elem_range<T>::get_column(x, start.y, finish.y);
 			}
 		};
 
@@ -164,8 +182,8 @@ namespace utils::coords_iterators
 	{
 	public:
 		constexpr row_range(const basic_coords<T>& first, const basic_coords<T>& last)
-			: int_range_adaptor<internal_helpers::row_adaptor<T>>{internal_helpers::row_adaptor{first,last},internal_helpers::height(first,last)}{}
-		explicit constexpr row_range(const basic_coords<T>& last) : row_range{basic_coords<T>{},last}{}
+			: int_range_adaptor<internal_helpers::row_adaptor<T>>{ internal_helpers::row_adaptor{first,last},internal_helpers::height(first,last) } {}
+		explicit constexpr row_range(const basic_coords<T>& last) : row_range{ basic_coords<T>{},last } {}
 	};
 
 	template <std::integral T>
@@ -174,6 +192,6 @@ namespace utils::coords_iterators
 	public:
 		constexpr column_range(const basic_coords<T>& first, const basic_coords<T>& last)
 			: int_range_adaptor<internal_helpers::column_adaptor<T>>{ internal_helpers::column_adaptor{first,last},internal_helpers::width(first,last) } {}
-		explicit constexpr column_range(const basic_coords<T>& last) : column_range{basic_coords<T>{},last}{}
+		explicit constexpr column_range(const basic_coords<T>& last) : column_range{ basic_coords<T>{},last } {}
 	};
 }
