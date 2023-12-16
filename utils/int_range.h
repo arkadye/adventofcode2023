@@ -13,7 +13,9 @@ namespace utils
 	template <std::integral INT>
 	class int_range
 	{
-		INT min, max, stride;
+		INT min;
+		INT max;
+		INT stride;
 		static constexpr INT get_max(INT min, INT max, INT stride)
 		{
 			const INT base_size = max - min;
@@ -45,6 +47,8 @@ namespace utils
 		constexpr int_range(INT finish) noexcept : int_range{ 0,finish } {}
 		constexpr int_range() : int_range{ 0 } {}
 
+		constexpr bool empty() const noexcept { return size() == 0u; }
+
 		constexpr INT operator[](std::size_t pos) const noexcept {
 			AdventCheck(pos < size());
 			return min + (stride * static_cast<INT>(pos));
@@ -59,11 +63,11 @@ namespace utils
 		}
 
 		// Operations
-		constexpr size_type  size() const noexcept {
+		constexpr size_type size() const noexcept {
 			return static_cast<size_type>((max - min) / stride);
 		}
 
-		constexpr int_range<INT> reverse() const noexcept
+		constexpr int_range<INT> reverse() const noexcept requires std::signed_integral<INT>
 		{
 			return int_range<INT>{ max - stride, min - stride, -stride };
 		}
@@ -74,9 +78,9 @@ namespace utils
 	template <typename AdaptorFn> requires std::regular_invocable<AdaptorFn,std::size_t>
 	class int_range_adaptor
 	{
-		int_range<std::size_t> range;
+		int_range<std::ptrdiff_t> range;
 		AdaptorFn adaptor_fn;
-		constexpr int_range_adaptor(AdaptorFn fn, int_range<std::size_t> rng) noexcept : adaptor_fn{ std::move(fn) }, range{ rng } {}
+		constexpr int_range_adaptor(AdaptorFn fn, int_range<std::ptrdiff_t> rng) noexcept : adaptor_fn{ std::move(fn) }, range{ rng } {}
 	public:
 		// Typedefs
 		using reference_type = std::invoke_result_t<AdaptorFn, std::size_t>;
@@ -89,43 +93,48 @@ namespace utils
 		const int_range<std::size_t>& get_underlying_range() const noexcept { return range; }
 
 		// Constructors
-		constexpr int_range_adaptor(AdaptorFn fn, std::size_t start, std::size_t finish, std::size_t stride_length) noexcept :
-			int_range_adaptor{ std::move(fn) , int_range<std::size_t>{start,finish,stride_length} } {}
-		constexpr int_range_adaptor(AdaptorFn fn, std::size_t start, std::size_t finish) noexcept
+		constexpr int_range_adaptor(AdaptorFn fn, std::ptrdiff_t start, std::ptrdiff_t finish, std::ptrdiff_t stride_length) noexcept :
+			int_range_adaptor{ std::move(fn) , int_range<std::ptrdiff_t>{start,finish,stride_length} } {}
+		constexpr int_range_adaptor(AdaptorFn fn, std::ptrdiff_t start, std::ptrdiff_t finish) noexcept
 			: int_range_adaptor{ std::move(fn), start,finish,1 } {}
-		constexpr int_range_adaptor(AdaptorFn fn, std::size_t finish) noexcept : int_range_adaptor{ std::move(fn), 0,finish } {}
+		constexpr int_range_adaptor(AdaptorFn fn, std::ptrdiff_t finish) noexcept : int_range_adaptor{ std::move(fn), 0,finish } {}
 		constexpr int_range_adaptor(AdaptorFn fn) : int_range_adaptor{ std::move(fn), 0 } {}
 
 		constexpr decltype(auto) operator[](std::size_t pos) const noexcept {
 			AdventCheck(pos < size());
-			return adaptor_fn(pos);
+			return adaptor_fn(range[pos]);
 		}
 
 		constexpr decltype(auto) operator[](std::size_t pos) noexcept {
 			AdventCheck(pos < size());
-			return adaptor_fn(pos);
+			return adaptor_fn(range[pos]);
 		}
 
 		constexpr decltype(auto) front() const noexcept {
-			return (*this)[0];
+			return (*this)[range.front()];
 		}
 
 		constexpr decltype(auto) front() noexcept
 		{
-			return (*this)[0];
+			return (*this)[range.front()];
 		}
 
 		constexpr decltype(auto) back() const noexcept {
-			return (*this)[size() - 1];
+			return (*this)[range.back()];
 		}
 
 		constexpr decltype(auto) back() noexcept {
-			return (*this)[size() - 1];
+			return (*this)[range.back()];
 		}
 
 		// Operations
 		constexpr size_type  size() const noexcept {
 			return range.size();
+		}
+
+		constexpr bool empty() const noexcept
+		{
+			return size() == size_type{ 0 };
 		}
 
 		constexpr int_range_adaptor<AdaptorFn> reverse() const noexcept
