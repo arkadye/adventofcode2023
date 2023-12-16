@@ -67,7 +67,7 @@ namespace utils
 			return get_from_real_index(pos + offset);
 		}
 
-		constexpr auto operator*() const { return (*this)[0]; }
+		constexpr decltype(auto) operator*() const { return (*this)[0]; }
 
 		// Comparisons
 		constexpr std::strong_ordering operator<=>(const index_iterator& other) const noexcept
