@@ -21,11 +21,32 @@ namespace
 #endif
 }
 
+#include "istream_line_iterator.h"
+#include <algorithm>
+#include <numeric>
+
 namespace
 {
-	int solve_p1(std::istream& input)
+	constexpr std::size_t MULTIPLIER = 17;
+	using Hash = std::uint8_t;
+
+	Hash add_char_to_hash(Hash existing, char c)
 	{
-		return 0;
+		AdventCheck(c != '\n');
+		const Hash new_hash = MULTIPLIER * (existing + c);
+		return new_hash;
+	}
+
+	Hash hash_string(std::string_view input)
+	{
+		return std::accumulate(begin(input), end(input), Hash{ 0 }, add_char_to_hash);
+	}
+
+	std::size_t solve_p1(std::istream& input)
+	{
+		using ILI = utils::istream_line_iterator;
+		return std::transform_reduce(ILI{ input,',' }, ILI{}, std::size_t{ 0 }, std::plus<std::size_t>{}, hash_string);
+
 	}
 }
 
@@ -35,6 +56,11 @@ namespace
 	{
 		return 0;
 	}
+}
+
+ResultType testcase_fifteen_p1(std::istream& input)
+{
+	return solve_p1(input);
 }
 
 ResultType advent_fifteen_p1()
