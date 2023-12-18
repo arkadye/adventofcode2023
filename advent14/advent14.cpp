@@ -176,7 +176,7 @@ namespace
 			};
 
 		auto row_range = utils::grid_helpers::row_view{ grid };
-		auto mul_range = utils::int_range{ grid.get_max_point().y , -1, -1 };
+		auto mul_range = utils::int_range{ std::size_t{1}, std::numeric_limits<std::size_t>::max() };
 
 		const std::size_t result = std::transform_reduce(begin(row_range), end(row_range), begin(mul_range),
 			std::size_t{0},	std::plus<std::size_t>{}, transform);
@@ -187,7 +187,7 @@ namespace
 	{
 		Grid grid = parse_grid(input);
 		log << "\nInput grid:\n" << grid;
-		grid = tilt_grid(std::move(grid),Direction::down);
+		grid = tilt_grid(std::move(grid),Direction::up);
 		log << "\n\nOutput grid:\n" << grid;
 		const std::size_t result = score_grid(grid);
 		log << "\nScore = " << result << '\n';
@@ -218,7 +218,7 @@ namespace
 
 	Grid cycle_grid(Grid grid)
 	{
-		constexpr std::array<Direction, 4> directions{ Direction::down,Direction::left,Direction::up,Direction::right };
+		constexpr std::array<Direction, 4> directions{ Direction::up,Direction::left,Direction::down,Direction::right };
 		for (Direction d : directions)
 		{
 			grid = tilt_grid(std::move(grid), d);

@@ -107,13 +107,13 @@ namespace
 		case '|':
 			return Pipe{ Dir::up, Dir::down };
 		case 'L':
-			return Pipe{ Dir::down, Dir::right };
-		case 'F':
 			return Pipe{ Dir::up, Dir::right };
+		case 'F':
+			return Pipe{ Dir::down, Dir::right };
 		case 'J':
-			return Pipe{ Dir::down, Dir::left };
-		case '7':
 			return Pipe{ Dir::up, Dir::left };
+		case '7':
+			return Pipe{ Dir::down, Dir::left };
 		default:
 			break;
 		}

@@ -98,7 +98,7 @@ namespace
 
 	std::size_t get_horizontal_line_of_symmetry(const Grid& grid, std::size_t ignore_reflection)
 	{
-		const auto rows = utils::grid_helpers::row_view{grid};
+		const auto rows = utils::grid_helpers::row_view{grid}.reverse();
 		return get_line_of_symmetry(rows, ignore_reflection / HORIZONTAL_MUL);
 	}
 

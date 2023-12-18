@@ -414,7 +414,8 @@ template <typename NodeType>
 inline std::size_t utils::grid<NodeType>::get_idx(int64_t x, int64_t y) const
 {
 	AdventCheck(is_on_grid(x,y));
-	const std::size_t result = m_max_point.x * y + x;
+	const int64_t inverted_y = m_max_point.y - y - 1;
+	const std::size_t result = m_max_point.x * inverted_y + x;
 	return result;
 }
 
