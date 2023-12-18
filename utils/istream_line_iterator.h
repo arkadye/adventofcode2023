@@ -83,11 +83,12 @@ namespace utils
 	class istream_line_range
 	{
 		std::istream& stream;
+		char m_sentinental;
 	public:
-		explicit istream_line_range(std::istream& input) : stream{ input } {}
+		istream_line_range(std::istream& input, char splitter = '\n') : stream{ input } , m_sentinental{splitter} {}
 		istream_line_range(const istream_line_range& other) = default;
 		istream_line_range() = delete;
-		istream_line_iterator begin() const { return istream_line_iterator{ stream }; }
+		istream_line_iterator begin() const { return istream_line_iterator{ stream , m_sentinental }; }
 		istream_line_iterator end() const { return istream_line_iterator{}; }
 	};
 }
