@@ -36,6 +36,10 @@ namespace utils
 		using value_type = NodeType;
 		using reference = NodeType&;
 		using const_reference = const NodeType&;
+		auto operator==(const grid& other) const noexcept requires std::equality_comparable<NodeType>
+		{
+			return m_max_point == other.m_max_point && stdr::equal(m_nodes, other.m_nodes);
+		}
 		bool is_on_grid(int64_t x, int64_t y) const;
 		bool is_on_grid(utils::coords coords) const { return is_on_grid(coords.x,coords.y); }
 		utils::coords get_max_point() const noexcept { return m_max_point; }
@@ -256,25 +260,12 @@ namespace utils
 		public:
 			elem_view(T& in_grid, const internal_helpers::underlying_range_t& range)
 				: internal_helpers::elem_view_base<T>{ internal_helpers::elem_adaptor{in_grid , range} , std::ssize(range) }{}
+			elem_view(T& in_grid, const utils::coords& first, const utils::coords& last)
+				: elem_view(in_grid, internal_helpers::underlying_range_t{ first,last }) {}
+			elem_view(T& in_grid, const utils::coords& last)
+				: elem_view(in_grid, utils::coords{ 0,0 }, last) {}
+			explicit elem_view(T& in_grid) : elem_view(in_grid, in_grid.get_max_point()) {}
 		};
-
-		template <grid_type T>
-		inline elem_view<T> get_elem_view(T& in_grid, const utils::coords& first, const utils::coords& last) noexcept
-		{
-			return elem_view<T>{in_grid, internal_helpers::underlying_range_t{ first, last } };
-		}
-
-		template <grid_type T>
-		inline elem_view<T> get_elem_view(T& in_grid, const utils::coords& last) noexcept
-		{
-			return get_elem_view(in_grid, utils::coords{ 0,0 }, last);
-		}
-
-		template <grid_type T>
-		inline elem_view<T> get_elem_view(T& in_grid) noexcept
-		{
-			return get_elem_view(in_grid, in_grid.get_max_point());
-		}
 
 		template <grid_type T>
 		inline elem_view<T> get_row_elem_view(T& in_grid, int x_min, int x_max, int y_const) noexcept
@@ -395,6 +386,17 @@ namespace utils
 			explicit column_view(T& in_grid)
 				: column_view{ in_grid , in_grid.get_max_point() } {}
 		};
+	}
+
+	template <typename NodeType>
+	inline std::ostream& operator<<(std::ostream& oss, const utils::grid<NodeType>& grid)
+	{
+		for (int idx : utils::int_range{ grid.get_max_point().y })
+		{
+			oss << '\n';
+			grid.stream_row(oss, idx);
+		}
+		return oss;
 	}
 }
 
@@ -641,16 +643,4 @@ inline void utils::grid<NodeType>::stream_row(std::ostream& oss, int row_idx) co
 {
 	const auto view = grid_helpers::get_row_elem_view(*this, row_idx);
 	oss << view;
-	return oss;
-}
-
-template <typename NodeType>
-inline std::ostream& operator<<(std::ostream& oss, const utils::grid<NodeType>& grid)
-{
-	for (int idx : utils::int_range{ grid.get_max_point().y })
-	{
-		oss << '\n';
-		grid.stream_row(oss, idx);
-	}
-	return oss;
 }
