@@ -4,8 +4,6 @@
 #include "advent_test_inputs.h"
 #include "advent_headers.h"
 
-static const std::string DEFAULT_FILTER = "";
-
 static const verification_test tests[] =
 {
 	TESTCASE_WITH_ARG(testcase_one_p1, TEST_ONE_A, 12),

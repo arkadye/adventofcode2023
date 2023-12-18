@@ -185,16 +185,24 @@ struct TestExecutor
 	std::pair<ResultType,std::chrono::nanoseconds> operator()(TestType test) { return run_test_func(std::move(test)); }
 };
 
-test_result run_test(const verification_test& test, std::string_view filter)
+test_result run_test(const verification_test& test, const std::vector<std::string_view>& filter)
 {
-	if (test.name.find(filter) == test.name.npos)
+	if(!filter.empty())
 	{
-		return test_result{
-			test.name,
-			"",
-			to_string(test.expected_result),
-			test_status::filtered
+		auto filter_pred = [name = std::string_view{ test.name }](std::string_view filter_item)
+		{
+			return name.find(filter_item) != name.npos;
 		};
+		const bool matches_filter = std::ranges::any_of(filter, filter_pred);
+		if(!matches_filter)
+		{
+			return test_result{
+				test.name,
+				"",
+				to_string(test.expected_result),
+				test_status::filtered
+			};
+		}
 	}
 	std::cout << "Running test " << test.name << "...";
 	const auto [res,time_taken] = std::visit(TestExecutor{}, test.test_func);
@@ -215,12 +223,16 @@ test_result run_test(const verification_test& test, std::string_view filter)
 	}
 }
 
-bool verify_all(const std::string& filter)
+bool verify_all(const std::vector<std::string_view>& filter)
 {
-	constexpr int NUM_TESTS = sizeof(tests) / sizeof(verification_test);
+	constexpr int NUM_TESTS = std::size(tests);
 	std::array<test_result, NUM_TESTS> results;
-	std::transform(tests, tests + NUM_TESTS, begin(results),
-		std::bind(run_test,std::placeholders::_1,filter));
+	std::ranges::transform(tests, begin(results),
+		[&filter](const verification_test& test)
+		{
+			return run_test(test, filter);
+		});
+
 	auto result_to_string = [&filter](const test_result& result)
 	{
 		std::ostringstream oss;
@@ -242,11 +254,11 @@ bool verify_all(const std::string& filter)
 		return oss.str();
 	};
 
-	std::transform(begin(results),end(results),std::ostream_iterator<std::string>(std::cout), result_to_string);
+	std::ranges::transform(results,std::ostream_iterator<std::string>(std::cout), result_to_string);
 
 	auto get_count = [&results](auto pred)
 	{
-		return std::count_if(begin(results), end(results), pred);
+		return std::ranges::count_if(results, pred);
 	};
 
 	const auto total_time = std::transform_reduce(begin(results), end(results), std::chrono::nanoseconds{ 0 },
@@ -258,12 +270,7 @@ bool verify_all(const std::string& filter)
 		"    FAILED : " << get_count(check_result<test_status::fail>) << "\n"
 		"    UNKNOWN: " << get_count(check_result<test_status::unknown>) << "\n"
 		"    TIME   : " << to_human_readable(total_time) << '\n';
-	return std::none_of(begin(results), end(results),check_result<test_status::fail>);
-}
-
-bool verify_all()
-{
-	return verify_all(DEFAULT_FILTER);
+	return std::ranges::none_of(results,check_result<test_status::fail>);
 }
 
 verification_test make_test(std::string name, TestFunc func, int64_t result)
