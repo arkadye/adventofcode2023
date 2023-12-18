@@ -237,3 +237,15 @@ R"(#...##..#
 #....#..#)";
 
 static const auto TEST_THIRTEEN_C = advent::combine_inputs<2>(TEST_THIRTEEN_A, TEST_THIRTEEN_B);
+
+constexpr const char* TEST_FOURTEEN_A =
+R"(O....#....
+O.OO#....#
+.....##...
+OO.#O....O
+.O.....O#.
+O.#..O.#.#
+..O..#O..O
+.......O..
+#....###..
+#OO..#....)";
