@@ -35,7 +35,7 @@ namespace utils
 		constexpr explicit small_vector(const allocator_type& alloc) noexcept;
 		constexpr small_vector(size_type count, const T& init, const allocator_type& alloc = allocator_type());
 		constexpr explicit small_vector(size_type count, const allocator_type& alloc = allocator_type());
-		template <typename InputIt>
+		template <std::input_iterator InputIt>
 		constexpr small_vector(InputIt first, InputIt last, const allocator_type& alloc = allocator_type());
 		constexpr small_vector(const small_vector& other);
 		constexpr small_vector(const small_vector& other, const allocator_type& alloc);
@@ -50,7 +50,7 @@ namespace utils
 		constexpr small_vector& operator=(std::initializer_list<T> init);
 
 		constexpr void assign(size_type count, const T& value);
-		template <typename InputIt>
+		template <std::input_iterator InputIt >
 		constexpr void assign(InputIt first, InputIt last);
 		constexpr void assign(std::initializer_list<T> init);
 
@@ -96,7 +96,7 @@ namespace utils
 		constexpr iterator insert(const_iterator pos, const T& value) { return insert(pos, 1, value); }
 		constexpr iterator insert(const_iterator pos, T&& value);
 		constexpr iterator insert(const_iterator pos, size_type count, const T& value);
-		template <typename InputIt>
+		template <std::input_iterator InputIt>
 		constexpr iterator insert(const_iterator pos, InputIt first, InputIt last);
 		constexpr iterator insert(const_iterator pos, std::initializer_list<T> init);
 		template <typename ...Args>
@@ -506,7 +506,7 @@ inline constexpr utils::small_vector<T, STACK_SIZE, ALLOC>::small_vector(size_ty
 }
 
 template<typename T, std::size_t STACK_SIZE, typename ALLOC>
-template<typename InputIt>
+template<std::input_iterator InputIt>
 inline constexpr utils::small_vector<T, STACK_SIZE, ALLOC>::small_vector(InputIt first, InputIt last, const allocator_type& alloc)
 	: small_vector(alloc)
 {
@@ -775,7 +775,7 @@ inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::iterator ut
 }
 
 template<typename T, std::size_t STACK_SIZE, typename ALLOC>
-template<typename InputIt>
+template<std::input_iterator InputIt>
 inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::iterator utils::small_vector<T, STACK_SIZE, ALLOC>::insert(const_iterator pos, InputIt first, InputIt last)
 {
 	using ItCategory = typename std::iterator_traits<InputIt>::iterator_category;
@@ -928,7 +928,7 @@ inline constexpr void utils::small_vector<T, STACK_SIZE, ALLOC>::assign(size_typ
 }
 
 template<typename T, std::size_t STACK_SIZE, typename ALLOC>
-template<typename InputIt>
+template<std::input_iterator InputIt>
 inline constexpr void utils::small_vector<T, STACK_SIZE, ALLOC>::assign(InputIt first, InputIt last)
 {
 	using ItCategory = typename std::iterator_traits<InputIt>::iterator_category;
@@ -1033,7 +1033,7 @@ inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::const_refer
 template<typename T_L, typename T_R, std::size_t STACK_SIZE_L, std::size_t STACK_SIZE_R, typename ALLOC_L, typename ALLOC_R>
 inline constexpr bool operator==(const utils::small_vector<T_L, STACK_SIZE_L, ALLOC_L>& left, const utils::small_vector<T_R, STACK_SIZE_R, ALLOC_R>& right) noexcept
 {
-	return std::equal(begin(left), end(left), begin(right), end(right));
+	return stdr::equal(left, right);;
 }
 
 template<typename T_L, typename T_R, std::size_t STACK_SIZE_L, std::size_t STACK_SIZE_R, typename ALLOC_L, typename ALLOC_R>
