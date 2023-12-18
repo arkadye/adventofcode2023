@@ -225,7 +225,7 @@ test_result run_test(const verification_test& test, const std::vector<std::strin
 
 bool verify_all(const std::vector<std::string_view>& filter)
 {
-	constexpr int NUM_TESTS = std::size(tests);
+	constexpr auto NUM_TESTS = std::size(tests);
 	std::array<test_result, NUM_TESTS> results;
 	std::ranges::transform(tests, begin(results),
 		[&filter](const verification_test& test)
