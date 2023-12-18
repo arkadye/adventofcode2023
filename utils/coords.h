@@ -37,9 +37,29 @@ namespace utils
 		return false;
 	}
 
+	inline constexpr bool is_ascending(direction dir)
+	{
+		switch (dir)
+		{
+		case direction::right:
+		case direction::up:
+			return true;
+		case direction::left:
+		case direction::down:
+			return false;
+		}
+		AdventUnreachable();
+		return false;
+	}
+
 	inline constexpr bool is_vertical(direction dir)
 	{
 		return !is_horizontal(dir);
+	}
+
+	inline constexpr bool is_descending(direction dir)
+	{
+		return !is_ascending(dir);
 	}
 
 	enum class turn_dir : char
