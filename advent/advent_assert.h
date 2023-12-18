@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 #include <sstream>
+#include <iostream>
 
 #ifdef _MSC_VER
 #define InternalAdventPlatformSpecificHint(condition) __assume(condition)
@@ -77,6 +78,7 @@ namespace advent
 					msg...
 				);
 
+				std::cerr << "\nAdventCheck failed: " << what << '\n';
 				test_failed error{ std::move(what) };
 				throw error;
 			}
