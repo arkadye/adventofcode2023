@@ -151,6 +151,7 @@ static const verification_test tests[] =
 	TESTCASE_WITH_ARG(testcase_fifteen_p1, "pc=6", 214),
 	TESTCASE_WITH_ARG(testcase_fifteen_p1, "ot=7", 231),
 	TESTCASE_WITH_ARG(testcase_fifteen_p1, TEST_FIFTEEN_A,1320),
+	TESTCASE_WITH_ARG(testcase_fifteen_p2, TEST_FIFTEEN_A,145),
 	DAY(fifteen,dummy,dummy),
 	DAY(sixteen,dummy,dummy),
 	DAY(seventeen,dummy,dummy),
