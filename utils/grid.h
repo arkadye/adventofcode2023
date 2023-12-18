@@ -391,7 +391,7 @@ namespace utils
 	template <typename NodeType>
 	inline std::ostream& operator<<(std::ostream& oss, const utils::grid<NodeType>& grid)
 	{
-		for (int idx : utils::int_range{ grid.get_max_point().y })
+		for (int idx : utils::int_range{ grid.get_max_point().y }.reverse())
 		{
 			oss << '\n';
 			grid.stream_row(oss, idx);
