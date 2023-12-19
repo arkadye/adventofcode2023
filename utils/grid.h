@@ -12,6 +12,7 @@
 #include "coords_iterators.h"
 #include "int_range.h"
 #include "small_vector.h"
+#include "range_contains.h"
 
 #define AOC_GRID_DEBUG_DEFAULT 0
 #if NDEBUG
@@ -43,6 +44,10 @@ namespace utils
 		bool is_on_grid(int64_t x, int64_t y) const;
 		bool is_on_grid(utils::coords coords) const { return is_on_grid(coords.x,coords.y); }
 		utils::coords get_max_point() const noexcept { return m_max_point; }
+		utils::coords bottom_left() const noexcept { return utils::coords{ 0,0 }; }
+		utils::coords top_left() const noexcept { return utils::coords{ 0, m_max_point.y - 1 }; }
+		utils::coords bottom_right() const noexcept { return utils::coords{ m_max_point.x - 1 , 0 }; }
+		utils::coords top_right() const noexcept { return m_max_point - utils::coords{ 1,1 }; }
 		void resize(const utils::coords& new_max, const NodeType& fill_value)
 		{
 			m_max_point = new_max;
@@ -90,7 +95,38 @@ namespace utils
 			});
 		}
 
-		void stream_row(std::ostream& oss, int row_idx) const;
+		template <typename Convert>
+		void stream_row(std::ostream& oss, int row_idx, const Convert& convert) const;
+		void stream_row(std::ostream& oss, int row_idx) const
+		{
+			auto impl = [](std::ostream& oss, const NodeType& node)
+				{
+					oss << node;
+				};
+			stream_row(oss, row_idx, impl);
+		}
+
+		template <typename Convert>
+		void stream_column(std::ostream& oss, int column_idx, const Convert& convert) const;
+		void stream_column(std::ostream& oss, int column_idx) const
+		{
+			auto impl = [](std::ostream& oss, const NodeType& node)
+				{
+					oss << node;
+				};
+			stream_column(oss, column_idx, impl);
+		}
+
+		template <typename Convert>
+		void stream_grid(std::ostream& oss, const Convert& convert) const;
+		void stream_grid(std::ostream& oss) const
+		{
+			auto impl = [](std::ostream& oss, const NodeType& node)
+				{
+					oss << node;
+				};
+			stream_grid(oss, impl);
+		}
 
 		void build_from_stream(std::istream& iss, const auto& char_to_node_fn)
 		{
@@ -368,10 +404,39 @@ namespace utils
 				: row_view{ in_grid , in_grid.get_max_point() } {}
 		};
 
-		template <grid_type T>
-		std::ostream& operator<<(std::ostream& oss, const elem_view<T>& view)
+		template <grid_type T, typename ConvertType> requires std::invocable<ConvertType,std::ostream&,typename T::value_type>
+		void stream_view(std::ostream& oss, elem_view<T> view, const ConvertType& conversion)
 		{
-			stdr::copy(view, std::ostream_iterator<typename T::value_type>{ oss });
+			for (const auto& elem : view)
+			{
+				conversion(oss, elem);
+			}
+		}
+
+		template <grid_type T, typename ConvertType> requires std::invocable<ConvertType, typename T::value_type>
+		void stream_view(std::ostream& oss, elem_view<T> view, const ConvertType& conversion)
+		{
+			auto impl = [&conversion](std::ostream& oss, const T::value_type& elem)
+				{
+					oss << conversion(elem);
+				};
+			stream_view(oss, view, impl);
+		}
+
+		template <grid_type T>
+		void stream_view(std::ostream& oss, elem_view<T> view)
+		{
+			auto impl = [](std::ostream& oss, const T::value_type& elem)
+				{
+					oss << elem;
+				};
+			stream_view(oss, view, impl);
+		}
+
+		template <grid_type T>
+		std::ostream& operator<<(std::ostream& oss, elem_view<T> view)
+		{
+			stream_view(oss, view);
 			return oss;
 		}
 
@@ -391,11 +456,7 @@ namespace utils
 	template <typename NodeType>
 	inline std::ostream& operator<<(std::ostream& oss, const utils::grid<NodeType>& grid)
 	{
-		for (int idx : utils::int_range{ grid.get_max_point().y }.reverse())
-		{
-			oss << '\n';
-			grid.stream_row(oss, idx);
-		}
+		grid.stream_grid(oss);
 		return oss;
 	}
 }
@@ -639,9 +700,31 @@ inline utils::small_vector<utils::coords,1> utils::grid<NodeType>::get_path(cons
 	return get_path(start, end, utils::grid_helpers::DefaultCostFunctor{}, utils::grid_helpers::DefaultHeuristicFunctor<NodeType>{ end });
 }
 
-template <typename NodeType>
-inline void utils::grid<NodeType>::stream_row(std::ostream& oss, int row_idx) const
+template<typename NodeType>
+template<typename Convert>
+inline void utils::grid<NodeType>::stream_row(std::ostream& oss, int row_idx, const Convert& convert) const
 {
-	const auto view = grid_helpers::get_row_elem_view(*this, row_idx);
-	oss << view;
+	AdventCheck(utils::range_contains_exc(row_idx, 0, m_max_point.y));
+	const auto row_view = grid_helpers::get_row_elem_view(*this, row_idx);
+	grid_helpers::stream_view(oss, row_view, convert);
+}
+
+template<typename NodeType>
+template<typename Convert>
+inline void utils::grid<NodeType>::stream_column(std::ostream& oss, int column_idx, const Convert& convert) const
+{
+	AdventCheck(utils::range_contains_exc(column_idx, 0, m_max_point.x));
+	const auto column_view = grid_helpers::get_column_elem_view(*this, column_idx);
+	grid_helpers::stream_view(oss, column_view, convert);
+}
+
+template<typename NodeType>
+template<typename Convert>
+inline void utils::grid<NodeType>::stream_grid(std::ostream& oss, const Convert& convert) const
+{
+	for (int row_idx : utils::int_range{ m_max_point.y }.reverse())
+	{
+		oss << '\n';
+		stream_row(oss, row_idx, convert);
+	}
 }
