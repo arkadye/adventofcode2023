@@ -136,6 +136,15 @@ namespace utils::coords_iterators
 			AdventCheck(start.x == finish.x);
 			return get_column(start, finish.y);
 		}
+
+		static elem_range<T> get_range(const basic_coords<T>& start, const basic_coords<T>& finish) noexcept
+		{
+			const bool going_right = finish.x >= start.x;
+			const bool going_up = finish.y >= start.y;
+			const T finish_x = going_right ? finish.x + 1 : finish.x-1;
+			const T finish_y = going_up ? finish.y + 1 : finish.y - 1;
+			return elem_range<T>{start, basic_coords<T>{finish_x,finish_y} };
+		}
 	};
 
 	namespace internal_helpers
