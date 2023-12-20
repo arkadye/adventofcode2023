@@ -16,6 +16,19 @@ namespace utils
 		using iterator = typename utils::small_vector<T,BufferSize>::iterator;
 		using const_iterator = typename utils::small_vector<T,BufferSize>::const_iterator;
 		using value_type = T;
+		bool can_insert_at_pos(const_iterator pos, const T& value) const noexcept
+		{
+			const bool check_after = (pos == m_data.cend() || !m_compare(*pos, value));
+			if (check_after)
+			{
+				const bool check_before = (pos == m_data.cbegin() || !m_compare(value, *(pos - 1)));
+				if (check_before)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
 	protected:
 		mutable utils::small_vector<T,BufferSize> m_data;
 		BinaryPred m_compare;
@@ -327,16 +340,8 @@ namespace utils
 				return insert(value);
 			}
 
-			const bool check_after = (hint == m_data.cend() || !m_compare(*hint, value));
-			if (check_after)
-			{
-				const bool check_before = (hint == m_data.cbegin() || !m_compare(value, *(hint - 1)));
-				if (check_before)
-				{
-					return m_data.insert(hint, value);
-				}
-			}
-			return insert(value);
+			const bool can_insert_at_hint = can_insert_at_pos(hint, value);
+			return can_insert_at_hint ? m_data.insert(hint, value) : insert(value);
 		}
 
 		iterator insert(T&& value)
@@ -351,6 +356,38 @@ namespace utils
 			m_sorted = m_data.empty() || (m_sorted && !m_compare(value, m_data.back()));
 			m_data.push_back(value);
 			return m_data.end() - 1;
+		}
+
+		std::pair<iterator,bool> insert_unique(T&& value)
+		{
+			const const_iterator insert_pos = lower_bound(value);
+			const bool can_insert_at_it = [insert_pos, &value, this]()
+			{
+				if (insert_pos == end()) return true;
+				return m_compare(value, *insert_pos);
+			}();
+			if (can_insert_at_it)
+			{
+				const iterator result = insert(insert_pos, std::forward<T>(value));
+				return std::pair{result, true};
+			}
+			return std::pair{end(), false};
+		}
+
+		std::pair<iterator, bool> insert_unique(const T& value)
+		{
+			const const_iterator insert_pos = lower_bound(value);
+			const bool can_insert_at_it = [insert_pos, &value, this]()
+			{
+				if (insert_pos == end()) return true;
+				return m_compare(value, *insert_pos);
+			}();
+			if (can_insert_at_it)
+			{
+				const iterator result = insert(insert_pos, value);
+				return std::pair{ result, true };
+			}
+			return std::pair{ end(), false };
 		}
 
 		iterator insert_keep_sorted(T&& value)
@@ -522,14 +559,72 @@ namespace utils
 			return result != underlying_type::end();
 		}
 
-		std::pair<iterator,bool> insert_unique(KeyType key, MappedType value)
+		std::pair<iterator, bool> insert_unique(KeyType&& key, MappedType&& value)
 		{
-			if (!contains_key(key))
+			const const_iterator insert_pos = lower_bound_by_key(key);
+			const bool can_insert_at_pos = [insert_pos, &key, this]()
 			{
-				const iterator result = insert(value_type{std::move(key),std::move(value)});
-				return std::pair{result,true};
+				if (insert_pos == underlying_type::end()) return true;
+				KeyCompare comp{};
+				return !comp(key, insert_pos->first);
+			}();
+			if (can_insert_at_pos)
+			{
+				const iterator result = insert(insert_pos, std::pair{std::forward<KeyType>(key) , std::forward<MappedType>(value) });
+				return std::pair{ result, true };
 			}
-			return std::pair{underlying_type::end(),false};
+			return std::pair{ end(*this), false };
+		}
+
+		std::pair<iterator, bool> insert_unique(KeyType&& key, const MappedType& value)
+		{
+			const const_iterator insert_pos = lower_bound_by_key(key);
+			const bool can_insert_at_it = [insert_pos, &key, this]()
+			{
+				if (insert_pos == underlying_type::end()) return true;
+				KeyCompare comp{};
+				return comp(key, insert_pos->first);
+			}();
+			if (can_insert_at_it)
+			{
+				const iterator result = insert(insert_pos, std::pair{ std::forward<KeyType>(key) , value });
+				return std::pair{ result, true };
+			}
+			return std::pair{ end(*this), false };
+		}
+
+		std::pair<iterator, bool> insert_unique(const KeyType& key, MappedType&& value)
+		{
+			const const_iterator insert_pos = lower_bound_by_key(key);
+			const bool can_insert_at_it = [insert_pos,&key, this]()
+			{
+				if(insert_pos == underlying_type::end()) return true;
+				KeyCompare comp{};
+				return comp(key, insert_pos->first);
+			}();
+			if(can_insert_at_it)
+			{
+				const iterator result = insert(insert_pos, std::pair{ key , std::forward<MappedType>(value) });
+				return std::pair{ result, true };
+			}
+			return std::pair{ end(*this), false };
+		}
+
+		std::pair<iterator, bool> insert_unique(const KeyType& key, const MappedType& value)
+		{
+			const const_iterator insert_pos = lower_bound_by_key(key);
+			const bool can_insert_at_it = [insert_pos, &key, this]()
+			{
+				if (insert_pos == underlying_type::end()) return true;
+				KeyCompare comp{};
+				return comp(key, insert_pos->first);
+			}();
+			if (can_insert_at_it)
+			{
+				const iterator result = insert(insert_pos, std::pair{ key , value });
+				return std::pair{ result, true };
+			}
+			return std::pair{ end(*this), false };
 		}
 
 		std::pair<iterator,bool> insert_or_assign(const KeyType& key, MappedType&& val)
