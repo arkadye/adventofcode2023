@@ -745,6 +745,7 @@ inline constexpr typename utils::small_vector<T, STACK_SIZE, ALLOC>::iterator ut
 	const GapDescription gap = make_gap_for_insert(pos, count);
 	fill_memory(gap, value);
 	m_num_elements += count;
+	return gap.initialised_memory.empty() ? gap.uninitialised_memory.finish : gap.initialised_memory.finish;
 }
 
 template<typename T, std::size_t STACK_SIZE, typename ALLOC>
