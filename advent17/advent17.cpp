@@ -194,7 +194,7 @@ namespace
 		return solve_generic(input,1,3);
 	}
 
-	int solve_p2(std::istream& input)
+	std::size_t solve_p2(std::istream& input)
 	{
 		return solve_generic(input,4,10);
 	}
