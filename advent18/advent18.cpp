@@ -42,10 +42,18 @@ namespace
 	{
 		switch(c)
 		{
-		case 'U': return Dir::up;
-		case 'D': return Dir::down;
-		case 'L': return Dir::left;
-		case 'R': return Dir::right;
+		case '3':
+		case 'U':
+			return Dir::up;
+		case '1':
+		case 'D':
+			return Dir::down;
+		case '2':
+		case 'L':
+			return Dir::left;
+		case '0':
+		case 'R':
+			return Dir::right;
 		default: break;
 		}
 		AdventUnreachable();
@@ -69,11 +77,31 @@ namespace
 		return to;
 	}
 
-	Coords add_points(PointCloud& result, const Coords& from,  std::string_view line)
+	template <AdventDay day>
+	Coords add_points(PointCloud& result, const Coords& from, std::string_view line)
+	{
+		AdventUnreachable();
+		return Coords{};
+	}
+
+	template <>
+	Coords add_points<AdventDay::one>(PointCloud& result, const Coords& from, std::string_view line)
 	{
 		auto [dir_str , dist_str] = utils::get_string_elements(line, 0, 1);
 		const Dir dir = to_direction(dir_str);
 		const int distance = utils::to_value<int>(dist_str);
+		return add_points(result, from, dir, distance);
+	}
+
+	template <>
+	Coords add_points<AdventDay::two>(PointCloud& result, const Coords& from, std::string_view line)
+	{
+		line = utils::get_string_element(line, 2);
+		line = utils::remove_specific_prefix(line, "(#");
+		line = utils::remove_specific_suffix(line, ")");
+		const Dir dir = to_direction(line.back());
+		line.remove_suffix(1);
+		const int distance = utils::to_value<int, 16>(line);
 		return add_points(result, from, dir, distance);
 	}
 
@@ -84,13 +112,14 @@ namespace
 		Coords top_right;
 	};
 
+	template <AdventDay day>
 	ParseResult parse_input(std::istream& input)
 	{
 		ParseResult result;
 		Coords current_point{0,0};
 		for(std::string_view line : utils::istream_line_range{input})
 		{
-			current_point = add_points(result.points, current_point, line);
+			current_point = add_points<day>(result.points, current_point, line);
 			result.bottom_left.x = std::min(result.bottom_left.x, current_point.x);
 			result.bottom_left.y = std::min(result.bottom_left.y, current_point.y);
 			result.top_right.x = std::max(result.top_right.x, current_point.x);
@@ -130,23 +159,26 @@ namespace
 		return result;
 	}
 
-	int solve_p1(std::istream& input)
+	template <AdventDay day>
+	std::size_t solve_generic(std::istream& input)
 	{
-		const ParseResult parse_result = parse_input(input);
-		const Coords bottom_left_border = parse_result.bottom_left - Coords{1,1};
-		const Coords top_right_border = parse_result.top_right + Coords{1,1};
+		const ParseResult parse_result = parse_input<day>(input);
+		const Coords bottom_left_border = parse_result.bottom_left - Coords{ 1,1 };
+		const Coords top_right_border = parse_result.top_right + Coords{ 1,1 };
 		const PointCloud outside = flood_fill(bottom_left_border, top_right_border, parse_result.points);
 		const int max_points = (top_right_border.x - bottom_left_border.x + 1) * (top_right_border.y - bottom_left_border.y + 1);
 		AdventCheck(static_cast<int64_t>(outside.size()) <= max_points);
 		return max_points - outside.size();
 	}
-}
 
-namespace
-{
-	int solve_p2(std::istream& input)
+	std::size_t solve_p1(std::istream& input)
 	{
-		return 0;
+		return solve_generic<AdventDay::one>(input);
+	}
+
+	std::size_t solve_p2(std::istream& input)
+	{
+		return solve_generic<AdventDay::two>(input);
 	}
 }
 
