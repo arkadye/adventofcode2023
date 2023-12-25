@@ -424,8 +424,8 @@ namespace utils
 		void unique()
 		{
 			sort();
-			const auto new_end = stdr::unique(m_data);
-			m_data.erase(new_end, m_data.end());
+			const auto eraseable_range = stdr::unique(m_data);
+			m_data.erase(eraseable_range.begin(), eraseable_range.end());
 		}
 
 		void swap(sorted_vector<T>& other)
