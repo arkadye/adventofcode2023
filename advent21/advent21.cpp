@@ -21,11 +21,81 @@ namespace
 #endif
 }
 
+#include "coords.h"
+#include "int_range.h"
+#include "sorted_vector.h"
+#include "istream_line_iterator.h"
+
 namespace
 {
-	int solve_p1(std::istream& input)
+	using Coords = utils::coords;
+
+	using PointCloud = utils::sorted_vector<Coords>;
+
+	struct ParseResult
 	{
-		return 0;
+		PointCloud garden_plots;
+		Coords start_point;
+	};
+
+	constexpr const char WALL = '#';
+	constexpr const char PLOT = '.';
+	constexpr const char START = 'S';
+
+	ParseResult parse_input(std::istream& input)
+	{
+		ParseResult result;
+		result.garden_plots.reserve(131 * 131);
+		Coords current{ 0,0 };
+		for (std::string_view line : utils::istream_line_range{ input })
+		{
+			for (char c : line)
+			{
+				switch (c)
+				{
+				case WALL:
+					break;
+				case START:
+					result.start_point = current;
+					//[[fallthrough]]
+				case PLOT:
+					result.garden_plots.push_back(current);
+					break;
+				default:
+					AdventUnreachable();
+					break;
+				}
+				++current.x;
+			}
+			current.x = 0;
+			++current.y;
+		}
+		return result;
+	}
+
+	PointCloud get_next_steps(const PointCloud& current_places, const PointCloud& plots)
+	{
+		PointCloud result;
+		result.reserve(4 * current_places.size());
+		for (const Coords& c : current_places)
+		{
+			AdventCheck(plots.contains(c));
+			stdr::copy_if(c.neighbours(), std::back_inserter(result), [&plots](const Coords& n) {return plots.contains(n); });
+		}
+		result.unique();
+		return result;
+	}
+
+	std::size_t solve_p1(std::istream& input, int num_steps)
+	{
+		const ParseResult parse_result = parse_input(input);
+		PointCloud possible_plots{ parse_result.start_point };
+		for (auto i : utils::int_range{ num_steps })
+		{
+			PointCloud next = get_next_steps(possible_plots, parse_result.garden_plots);
+			possible_plots = std::move(next);
+		}
+		return possible_plots.size();
 	}
 }
 
@@ -37,10 +107,15 @@ namespace
 	}
 }
 
+ResultType testcase_twentyone_p1(std::istream& input)
+{
+	return solve_p1(input, 6);
+}
+
 ResultType advent_twentyone_p1()
 {
 	auto input = advent::open_puzzle_input(21);
-	return solve_p1(input);
+	return solve_p1(input, 64);
 }
 
 ResultType advent_twentyone_p2()
