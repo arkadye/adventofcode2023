@@ -320,3 +320,17 @@ hdj{m>838:A,pv}
 {x=2036,m=264,a=79,s=2244}
 {x=2461,m=1339,a=466,s=291}
 {x=2127,m=1623,a=2188,s=1013})";
+
+constexpr const char* TEST_TWENTY_A =
+R"(broadcaster -> a, b, c
+%a -> b
+%b -> c
+%c -> inv
+&inv -> a)";
+
+constexpr const char* TEST_TWENTY_B =
+R"(broadcaster -> a
+%a -> inv, con
+&inv -> b
+%b -> con
+&con -> output)";
