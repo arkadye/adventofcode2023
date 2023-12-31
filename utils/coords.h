@@ -194,10 +194,10 @@ namespace utils
 			return x;
 		}
 
-		static basic_coords up() noexcept { return basic_coords{ 0,1 }; }
-		static basic_coords down() noexcept { return basic_coords{ 0,-1 }; }
-		static basic_coords left() noexcept { return basic_coords{ -1,0 }; }
-		static basic_coords right() noexcept { return basic_coords{ 1,0 }; }
+		static basic_coords up() noexcept { return basic_coords{ static_cast<T>(0),static_cast<T>(1) }; }
+		static basic_coords down() noexcept { static_assert(std::is_signed_v<T>); return basic_coords{ static_cast<T>(0),static_cast<T>(-1) }; }
+		static basic_coords left() noexcept { static_assert(std::is_signed_v<T>); return basic_coords{ static_cast<T>(-1),static_cast<T>(0) }; }
+		static basic_coords right() noexcept { return basic_coords{ static_cast<T>(1),static_cast<T>(0) }; }
 		static basic_coords dir(direction dir) noexcept
 		{
 			switch (dir)
