@@ -32,7 +32,7 @@ namespace utils
 	{
 		utils::small_vector<NodeType,1> m_nodes;
 		utils::coords m_max_point;
-		std::size_t get_idx(int64_t x, int64_t y) const;
+		std::size_t get_idx(std::integral auto x, std::integral auto y) const;
 	public:
 		using value_type = NodeType;
 		using reference = NodeType&;
@@ -41,8 +41,9 @@ namespace utils
 		{
 			return m_max_point == other.m_max_point && stdr::equal(m_nodes, other.m_nodes);
 		}
-		bool is_on_grid(int64_t x, int64_t y) const;
-		bool is_on_grid(utils::coords coords) const { return is_on_grid(coords.x,coords.y); }
+		bool is_on_grid(std::integral auto x, std::integral auto y) const;
+		template <std::integral T>
+		bool is_on_grid(utils::basic_coords<T> coords) const { return is_on_grid(coords.x,coords.y); }
 		utils::coords get_max_point() const noexcept { return m_max_point; }
 		utils::coords bottom_left() const noexcept { return utils::coords{ 0,0 }; }
 		utils::coords top_left() const noexcept { return utils::coords{ 0, m_max_point.y - 1 }; }
@@ -60,10 +61,12 @@ namespace utils
 
 		std::size_t size() const noexcept {	return m_nodes.size(); }
 
-		NodeType& at(int64_t x, int64_t y) { return m_nodes[get_idx(x,y)]; }
-		const NodeType& at(int64_t x, int64_t y) const { return m_nodes[get_idx(x,y)]; }
-		NodeType& at(utils::coords coords) { return at(coords.x,coords.y); }
-		const NodeType& at(utils::coords coords) const { return at(coords.x,coords.y); }
+		NodeType& at(std::integral auto x, std::integral auto y) { return m_nodes[get_idx(x,y)]; }
+		const NodeType& at(std::integral auto x, std::integral auto y) const { return m_nodes[get_idx(x,y)]; }
+		template <std::integral T>
+		NodeType& at(utils::basic_coords<T> coords) { return at(coords.x,coords.y); }
+		template <std::integral T>
+		const NodeType& at(utils::basic_coords<T> coords) const { return at(coords.x,coords.y); }
 
 		// Get all nodes that meet a predicate
 		utils::small_vector<utils::coords,1> get_all_coordinates_by_predicate(const auto& predicate) const
@@ -462,7 +465,7 @@ namespace utils
 }
 
 template <typename NodeType>
-inline bool utils::grid<NodeType>::is_on_grid(int64_t x, int64_t y) const
+inline bool utils::grid<NodeType>::is_on_grid(std::integral auto x, std::integral auto y) const
 {
 	if(x < 0) return false;
 	if(y < 0) return false;
@@ -472,11 +475,11 @@ inline bool utils::grid<NodeType>::is_on_grid(int64_t x, int64_t y) const
 }
 
 template <typename NodeType>
-inline std::size_t utils::grid<NodeType>::get_idx(int64_t x, int64_t y) const
+inline std::size_t utils::grid<NodeType>::get_idx(std::integral auto x, std::integral auto y) const
 {
 	AdventCheck(is_on_grid(x,y));
-	const int64_t inverted_y = m_max_point.y - y - 1;
-	const std::size_t result = m_max_point.x * inverted_y + x;
+	const auto inverted_y = m_max_point.y - y - 1;
+	const auto result = m_max_point.x * inverted_y + x;
 	return result;
 }
 
