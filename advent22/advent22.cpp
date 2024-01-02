@@ -27,6 +27,7 @@ namespace
 #include "sorted_vector.h"
 #include "istream_line_iterator.h"
 #include "int_range.h"
+#include "coords3d.h"
 
 #include <tuple>
 
@@ -34,28 +35,7 @@ namespace
 {
 	using CoordType = int;
 
-	struct Coords
-	{
-		CoordType x = 0;
-		CoordType y = 0;
-		CoordType z = 0;
-		Coords& operator+=(const Coords& c) noexcept
-		{
-			x += c.x;
-			y += c.y;
-			z += c.z;
-			return *this;
-		}
-		constexpr auto operator<=>(const Coords& other) const noexcept
-		{
-			auto to_tuple = [](const Coords& c)
-				{
-					return std::tuple{ c.z,c.x,c.y };
-				};
-			return to_tuple(*this) <=> to_tuple(other);
-		}
-		constexpr bool operator==(const Coords&) const noexcept = default;
-	};
+	using Coords = utils::coords3d<CoordType>;
 
 	Coords parse_coords(std::string_view sv)
 	{
@@ -65,13 +45,6 @@ namespace
 		};
 		auto [x, y, z] = utils::get_string_elements(sv, ',', 0, 1, 2);
 		return Coords{ to_val(x), to_val(y), to_val(z) };
-	}
-
-	Coords operator+(const Coords& l, const Coords& r) noexcept
-	{
-		Coords result = l;
-		result += r;
-		return result;
 	}
 
 	struct Block
